@@ -1,0 +1,1 @@
+﻿public enum FillRule { NON_ZERO, EVEN_ODD }
