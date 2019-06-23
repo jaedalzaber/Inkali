@@ -17,7 +17,7 @@
 				Comp Always
 				Pass Invert
 				Fail Invert
-				ZFail Keep
+				ZFail Invert
 				WriteMask 1
 			}
 
@@ -57,16 +57,6 @@
 			fixed4 frag(v2f i) : SV_Target
 			{   
 				if (i.uv.w == 1) {
-					/*			float t = i.uv.x * i.uv.x * i.uv.x - i.uv.y * i.uv.z;
-					float m = 0.0;
-					if (t < 0.0) m = -1.0;
-					if (t > 0.0) m = 1.0f;
-					float alpha = clamp(m, 0.0, 0.1);
-					fixed4 col = _outColor;
-					if (alpha > 0.01)
-						discard;
-					return col;*/
-
 					float3 px = ddx(i.uv.xyz);
 					float3 py = ddy(i.uv.xyz);
 
@@ -92,11 +82,6 @@
 					 // Signed distance
 					 float sd = (i.uv.x*i.uv.x - i.uv.y) / sqrt(fx*fx + fy * fy);
 
-					 //float alpha = 1;
-					 ///*if (sd > -0.01)
-					 //	alpha = .5;*/
-					 //if(sd > 0.0 )
-					 //	alpha = 0;
 					 float alpha = 0.5 - sd;
 					 if (alpha < 0)  // Outside
 						 discard;

@@ -74,17 +74,21 @@ public class Test : MonoBehaviour {
         p1.Add(new PCubic(new Vector2d(0,1), new Vector2d(0,2), new Vector2d(2,2), new Vector2d(2,0)));
         p1.Add(new PCubic(new Vector2d(5, -2), new Vector2d(2, -3), new Vector2d(0, -2)));
         p1.Add(new PCubic(new Vector2d(-1, 2), new Vector2d(3, 3), new Vector2d(4, 1)));
-        p1.Add(new PLine(new Vector2d(2, -1)));
-        p1.Add(new PQuadratic(new Vector2d(0, -2), new Vector2d(-.5f, 0)));
+        // p1.Add(new PLine(new Vector2d(2, -1)));
+        p1.Add(new PCubic(new Vector2d(4, -4), new Vector2d(0, -4), new Vector2d(-.5f, 1)));
+        p1.Add(new PCubic(new Vector2d(0, -3), new Vector2d(4, -3), new Vector2d(4, 1)));
+        p1.Add(new PCubic(new Vector2d(0, 0), new Vector2d(0, -3), new Vector2d(4, -4)));
+
         paint = new PaintSolid(Color.cyan);
         p1.FillPaint = paint;
-        Path p2 = engine.CreatePath("p2");
-        p2.Add(new PArc(new Vector2d(0, 0), new Vector2d(1, 1), 2, 2, 0, true, PArc.SweepDirection.ANTI_CLOCKWISE));
-        p2.Add(new PArc(new Vector2d(0, 0), new Vector2d(-.5, 2), 2, 2, 0, true, PArc.SweepDirection.CLOCKWISE));
-        p2.FillPaint = new PaintSolid(Color.green);
 
-        //engine.addEntity(p1);
-        engine.addEntity(p2);
+        // Path p2 = engine.CreatePath("p2");
+        // p2.Add(new PArc(new Vector2d(0, 0), new Vector2d(1, 1), 2, 2, 0, true, PArc.SweepDirection.ANTI_CLOCKWISE));
+        // p2.Add(new PArc(new Vector2d(0, 0), new Vector2d(-.5, 2), 2, 2, 0, true, PArc.SweepDirection.CLOCKWISE));
+        // p2.FillPaint = new PaintSolid(Color.green);
+
+        engine.addEntity(p1);
+        // engine.addEntity(p2);
 
     }
     // Update is called once per frame
@@ -92,7 +96,7 @@ public class Test : MonoBehaviour {
         engine.update(Time.deltaTime);
         if (Input.anyKeyDown) {
             Color c = Color.yellow;
-            paint.Color = c;
+            // paint.Color = c;
         }
     }
 }

@@ -1,14 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
-public class SystemFill : EntitySystem, EntityListener {
+public class SystemStroke : EntitySystem, EntityListener {
     private List<Shape> shapes;
     public override void addedToEngine(Engine engine) {
-        shapes = engine.getEntitiesFor(Family.all(typeof(CompFill)).get()).toList().Cast<Shape>().ToList();
+        shapes = engine.getEntitiesFor(Family.all(typeof(CompStroke)).get()).toList().Cast<Shape>().ToList();
     }
 
     public void entityAdded(Entity entity) {
@@ -27,7 +25,7 @@ public class SystemFill : EntitySystem, EntityListener {
 
     public override void update(float deltaTime) {
         foreach(Shape shape in shapes) {
-            if (shape.UpdateFill) {
+            if (shape.UpdateStroke) {
                 ProcessShape(shape);
             }
         }
@@ -40,15 +38,13 @@ public class SystemFill : EntitySystem, EntityListener {
     int[] idx = new int[6];
 
     private void ProcessShape(Shape shape) {
-        CompFill comp = shape.getComponent<CompFill>(typeof(CompFill));
+        CompStroke comp = shape.getComponent<CompStroke>(typeof(CompStroke));
         List<Vector3> vertices = new List<Vector3>();
         List<Vector4> uv = new List<Vector4>();
         List<int> indices = new List<int>();
         vertices.Clear();
         uv.Clear();
         indices.Clear();
-
-        
 
         foreach (Segment seg in shape.segments) {
             if(seg.GetType() == typeof(PCubic)) {
@@ -60,46 +56,35 @@ public class SystemFill : EntitySystem, EntityListener {
             }
         }
 
-        // FillShape(shape, vertices, uv, indices);
+        FillStroke(shape, vertices, uv, indices);
 
-        // vertices.Add(v1);
-        // vertices.Add(v2);
-        // vertices.Add(v3);
-        // vertices.Add(v4);
-        // uv.Add(new Vector4(1, 1, 1, 0));
-        // uv.Add(new Vector4(1, 1, 1, 0));
-        // uv.Add(new Vector4(1, 1, 1, 0));
-        // uv.Add(new Vector4(1, 1, 1, 0));
-        // idx[0] = indices.Count;
-        // idx[1] = indices.Count + 1;
-        // idx[2] = indices.Count + 2;
-        // idx[3] = indices.Count;
-        // idx[4] = indices.Count + 2;
-        // idx[5] = indices.Count + 3;
-        float z = 0f;
-        float t = .1f;
-        for (int i = 0; i < vertices.Count; i+=3)
-        {
-            vertices[i] = new Vector3(vertices[i].x, vertices[i].y, vertices[i].z+z);
-            z+=t;
-            vertices[i+1] = new Vector3(vertices[i+1].x, vertices[i+1].y, vertices[i+1].z+z);
-            z+=t;
-            vertices[i+2] = new Vector3(vertices[i+2].x, vertices[i+2].y, vertices[i+2].z+z);
-            z+=t;
-        }
+        vertices.Add(v1);
+        vertices.Add(v2);
+        vertices.Add(v3);
+        vertices.Add(v4);
+        uv.Add(new Vector4(1, 1, 1, 0));
+        uv.Add(new Vector4(1, 1, 1, 0));
+        uv.Add(new Vector4(1, 1, 1, 0));
+        uv.Add(new Vector4(1, 1, 1, 0));
+        idx[0] = indices.Count;
+        idx[1] = indices.Count + 1;
+        idx[2] = indices.Count + 2;
+        idx[3] = indices.Count;
+        idx[4] = indices.Count + 2;
+        idx[5] = indices.Count + 3;
 
-        shape.meshFill.Clear();
-        shape.meshFill.subMeshCount = 2;
-        shape.meshFill.SetVertices(vertices);
-        shape.meshFill.SetUVs(0, uv);
-        shape.meshFill.SetTriangles(indices.ToArray(), 0);
+        shape.meshStroke.Clear();
+        shape.meshStroke.subMeshCount = 2;
+        shape.meshStroke.SetVertices(vertices);
+        shape.meshStroke.SetUVs(0, uv);
+        shape.meshStroke.SetTriangles(indices.ToArray(), 0);
         //indices.Clear();
-        shape.meshFill.SetTriangles(indices.ToArray(), 1);
+        shape.meshStroke.SetTriangles(indices.ToArray(), 1);
 
-        shape.UpdateFill = false;
+        shape.UpdateStroke = false;
     }
 
-    private void FillShape(Shape shape, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
+    private void FillStroke(Shape shape, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
         if (shape.segments.Count > 1) {
             for(int i=0; i< shape.segments.Count-1; i++) {
                 if(shape.segments[i].GetType() == typeof(PArc)) {
