@@ -16,9 +16,6 @@
 			Cull off
 			// ZWrite off
 			Blend SrcAlpha OneMinusSrcAlpha
-			//ColorMask RGBA
-			// ZTest Always  
-			// offset -1, 0
 			Stencil {
 				Ref 1
 				Comp Equal
@@ -38,11 +35,13 @@
 			{
 				float4 vertex : POSITION;
 				float4 uv : TEXCOORD0;
+				float4 uv2 : TEXCOORD1;
 			};
 
 			struct v2f
 			{
 				float4 uv : TEXCOORD0;
+				float4 uv2 : TEXCOORD1;
 				float4 vertex : SV_POSITION;
 			};
 
@@ -56,14 +55,22 @@
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = v.uv;
+				o.uv2 = v.uv2;
 				return o;
 			}
 			
 			fixed4 frag(v2f i) : SV_Target
 			{
-				/*if (i.uv.w == 0)
-					discard;*/
+				if (i.uv.w == 0)
+					discard;
 				if (i.uv.w == 1) {
+					// float dist = distance(i.uv2.xy, fixed2(1, 1));
+					// float delta = fwidth(dist);
+					// float alpha = smoothstep(0, delta, i.uv2.y);
+					// if(i.uv2.y < delta){
+					// 	return fixed4(_inColor.xyz, alpha  * _inColor.w);
+					// }
+
 					float3 px = ddx(i.uv.xyz);
 					float3 py = ddy(i.uv.xyz);
 
@@ -198,10 +205,6 @@
 			ZWrite off
 			
 			Blend SrcAlpha OneMinusSrcAlpha
-			//ColorMask RGBA
-			// ZTest Greater  
-			// ZTest Always  
-			// offset -1, 0
 			Stencil {
 				Ref 0
 				Comp Equal
@@ -221,11 +224,13 @@
 			{
 				float4 vertex : POSITION;
 				float4 uv : TEXCOORD0;
+				float4 uv2 : TEXCOORD1;
 			};
 
 			struct v2f
 			{
 				float4 uv : TEXCOORD0;
+				float4 uv2 : TEXCOORD1;
 				float4 vertex : SV_POSITION;
 			};
 
@@ -241,14 +246,22 @@
 				float4 vert = UnityObjectToClipPos(u);
 				o.vertex = vert;
 				o.uv = v.uv;
+				o.uv2 = v.uv2;
 				return o;
 			}
 			
 			fixed4 frag(v2f i) : SV_Target
 			{
-				if (i.uv.w == 5)
+				if (i.uv.w == 5 || i.uv.w == 0)
 					discard;
 				if (i.uv.w == 1) {
+					// float dist = distance(i.uv2.xy, fixed2(1, 1));
+					// float delta = fwidth(dist);
+					// float alpha = smoothstep(0, delta, i.uv2.y);
+					// if(i.uv2.y < delta){
+					// 	return fixed4(_inColor.xyz, (1-alpha)  * _inColor.w);
+					// }
+
 					float3 px = ddx(i.uv.xyz);
 					float3 py = ddy(i.uv.xyz);
 

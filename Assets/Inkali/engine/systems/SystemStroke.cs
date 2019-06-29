@@ -41,6 +41,7 @@ public class SystemStroke : EntitySystem, EntityListener {
         CompStroke comp = shape.getComponent<CompStroke>(typeof(CompStroke));
         List<Vector3> vertices = new List<Vector3>();
         List<Vector4> uv = new List<Vector4>();
+        List<Vector2> uv2 = new List<Vector2>();
         List<int> indices = new List<int>();
         vertices.Clear();
         uv.Clear();
@@ -48,7 +49,7 @@ public class SystemStroke : EntitySystem, EntityListener {
 
         foreach (Segment seg in shape.segments) {
             if(seg.GetType() == typeof(PCubic)) {
-                PathUtils.ComputeCubic((PCubic)seg, vertices, uv, indices);
+                PathUtils.ComputeCubic((PCubic)seg, vertices, uv, uv2, indices);
             } else if (seg.GetType() == typeof(PQuadratic)) {
                 PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, indices);
             } else if (seg.GetType() == typeof(PArc)) {

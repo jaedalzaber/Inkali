@@ -1,17 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static PathUtils;
 
 public class Result{
 
 	public float fd1=0,fd2=0,fd3=0;
-	public CubicCurve.CurveType curve_type;
+	public CurveType curve_type;
 
 	public Result(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3){
 		curve_type = determineType (x0, y0, x1, y1, x2, y2, x3, y3);
 	}
 
-	public CubicCurve.CurveType determineType(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3){
+	public CurveType determineType(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3){
 		float d3 = 0;
 		float d1 = 0;
 		float d2 = 0;
@@ -45,24 +46,24 @@ public class Result{
 			if (((d1 == 0.0f) 
 				&& (d2 == 0.0f))) {
 				if ((d3 == 0.0f)) {
-					return CubicCurve.CurveType.LINE;
+					return CurveType.LINE;
 				}
-				return CubicCurve.CurveType.QUADRATIC;
+				return CurveType.QUADRATIC;
 			}
 
 			if ((d1 == 0.0f)) {
-				return CubicCurve.CurveType.CUSP;
+				return CurveType.CUSP;
 			}
 
 			if ((D < 0.0f)) {
-				return CubicCurve.CurveType.LOOP;
+				return CurveType.LOOP;
 			}
 
 		}
 
 		if ((disc > 0.0f)) {
-			return CubicCurve.CurveType.SERPENTINE;
+			return CurveType.SERPENTINE;
 		}
-		return CubicCurve.CurveType.LOOP; 
+		return CurveType.LOOP; 
 	}
 }

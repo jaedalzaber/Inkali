@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using static CubicCurve;
 
 public class PathUtils {
     private static Vector2 start = new Vector2();
@@ -15,6 +14,7 @@ public class PathUtils {
     private static Line l = new Line();
 
     private static List<Vector3> verts = new List<Vector3>();
+    public enum CurveType{UNKNOWN, SERPENTINE, LOOP, CUSP, QUADRATIC, LINE};
 
     public static double epsilon = 0.000001;
     public static double[] Tvalues = new double[] { -0.0640568928626056260850430826247450385909f,
@@ -59,7 +59,7 @@ public class PathUtils {
         }
     }
 
-    public static Vector2d ComputeCubic(PCubic cubic, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
+    public static Vector2d ComputeCubic(PCubic cubic, List<Vector3> vertices, List<Vector4> uv, List<Vector2> uv2, List<int> indices) {
         start = cubic.StartPoint.f();
         ctrl1 = cubic.Ctrl1.f();
         ctrl2 = cubic.Ctrl2.f();
@@ -77,7 +77,7 @@ public class PathUtils {
         }
         verts.Clear();
         CurveType curve_type = compute((float)start.x, (float)start.y, (float)ctrl1.x, (float)ctrl1.y, (float)ctrl2.x, (float)ctrl2.y, (float)end.x, (float)end.y, -1,
-            verts, uv, indices);
+            verts, uv, uv2, indices);
 
        int ol = orientationLoop(start, ctrl1, ctrl2, end);
         Vector2d point = new Vector2d();
@@ -95,9 +95,9 @@ public class PathUtils {
         //            t = (float)r.get(i);
         //    }
         //    point.Set(c.ValueAt(t));
-        //    AddVertexPlain(new Vertex(verts[5]), verts, uv, indices);
-        //    AddVertexPlain(new Vertex(point.f()), verts, uv, indices);
-        //    AddVertexPlain(new Vertex(start), verts, uv, indices);
+        //    AddVertexPlain(new Vertex(verts[5]), verts, uv, uv2, indices);
+        //    AddVertexPlain(new Vertex(point.f()), verts, uv, uv2, indices);
+        //    AddVertexPlain(new Vertex(start), verts, uv, uv2, indices);
         //} else if (curve_type == CurveType.LOOP && ol == 1 && verts.Count / 3 == 6) {
         //    l.p1 = new Vector2d(end);
         //    l.p2 = new Vector2d(verts[12].x, verts[12].y);
@@ -108,16 +108,16 @@ public class PathUtils {
         //            t = (float)r.get(i);
         //    }
         //    point.Set(c.ValueAt(t));
-        //    AddVertexPlain(new Vertex(verts[14]), verts, uv, indices);
-        //    AddVertexPlain(new Vertex(point.f()), verts, uv, indices);
-        //    AddVertexPlain(new Vertex(end), verts, uv, indices);
+        //    AddVertexPlain(new Vertex(verts[14]), verts, uv, uv2, indices);
+        //    AddVertexPlain(new Vertex(point.f()), verts, uv, uv2, indices);
+        //    AddVertexPlain(new Vertex(end), verts, uv, uv2, indices);
         //}
         vertices.AddRange(verts);
         return point;
     }
 
     private static CurveType compute(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int recursiveType,
-        List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
+        List<Vector3> vertices, List<Vector4> uv, List<Vector2> uv2, List<int> indices) {
         Result res = new Result(x0, y0, x1, y1, x2, y2, x3, y3);
         CurveType curve_type = res.curve_type;
 
@@ -312,12 +312,12 @@ public class PathUtils {
 
             if ((errorLoop == 1)) {
                 //  flip second
-                compute(x0, y0, x01, y01, x012, y012, x0123, y0123, 0, vertices, uv, indices);
-                compute(x0123, y0123, x123, y123, x23, y23, x3, y3, 1, vertices, uv, indices);
+                compute(x0, y0, x01, y01, x012, y012, x0123, y0123, 0, vertices, uv, uv2, indices);
+                compute(x0123, y0123, x123, y123, x23, y23, x3, y3, 1, vertices, uv, uv2, indices);
             } else if ((errorLoop == 2)) {
                 //  flip first
-                compute(x0, y0, x01, y01, x012, y012, x0123, y0123, 1, vertices, uv, indices);
-                compute(x0123, y0123, x123, y123, x23, y23, x3, y3, 0, vertices, uv, indices);
+                compute(x0, y0, x01, y01, x012, y012, x0123, y0123, 1, vertices, uv, uv2, indices);
+                compute(x0123, y0123, x123, y123, x23, y23, x3, y3, 0, vertices, uv, uv2, indices);
             }
             return curve_type;
         } 
@@ -338,7 +338,7 @@ public class PathUtils {
 
         }
 
-        Triangulation(x0, y0, x1, y1, x2, y2, x3, y3, klm, vertices, uv, indices);
+        Triangulation(x0, y0, x1, y1, x2, y2, x3, y3, klm, vertices, uv, uv2, indices);
         return curve_type;
     }
     private static Vertex v0 = new Vertex();
@@ -347,22 +347,25 @@ public class PathUtils {
     private static Vertex v3 = new Vertex();
     private static Vertex[] vertices = new Vertex[4] { v0, v1, v2, v3};
 
-    private static void AddVertex(Vertex v, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
+    private static void AddVertex(Vertex v, List<Vector3> vertices, List<Vector4> uv, List<Vector2> uv2, List<int> indices) {
         vertices.Add(new Vector3(v.xy.x, v.xy.y, 1));
         uv.Add(new Vector4(v.coords.x, v.coords.y, v.coords.z, 1));
+        uv2.Add(new Vector2(v.uv2.x, v.uv2.y));
         indices.Add(indices.Count);
     }
 
-    private static void AddVertexPlain(Vertex v, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
+    private static void AddVertexPlain(Vertex v, List<Vector3> vertices, List<Vector4> uv, List<Vector2> uv2, List<int> indices) {
         vertices.Add(new Vector3(v.xy.x, v.xy.y, 1));
         uv.Add(new Vector4(v.coords.x, v.coords.y, v.coords.z, 0));
+        uv2.Add(new Vector2(v.uv2.x, v.uv2.y));
         indices.Add(indices.Count);
     }
-    private static void Triangulation(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float[] klm, List<Vector3> verts, List<Vector4> uv, List<int> idx) {
-        v0.Set(x0, y0, klm[0], klm[1], klm[2], 1);
-        v1.Set(x1, y1, klm[3], klm[4], klm[5], 1);
-        v2.Set(x2, y2, klm[6], klm[7], klm[8], 1);
-        v3.Set(x3, y3, klm[9], klm[10], klm[11], 1);
+    private static void Triangulation(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, 
+    float[] klm, List<Vector3> verts, List<Vector4> uv, List<Vector2> uv2, List<int> idx) {
+        v0.Set(x0, y0, klm[0], klm[1], klm[2], 1, 0, 0);
+        v1.Set(x1, y1, klm[3], klm[4], klm[5], 1, 1, 1);
+        v2.Set(x2, y2, klm[6], klm[7], klm[8], 1, 1, 1);
+        v3.Set(x3, y3, klm[9], klm[10], klm[11], 1, 1, 0);
         for (int i = 0; (i < 4); i++) {
             for (int j = (i + 1); (j < 4); j++) {
                 if (approxEqual(vertices[i].xy, vertices[j].xy)) {
@@ -374,9 +377,9 @@ public class PathUtils {
                         }
 
                     }
-                    AddVertex(vertices[indices[0]], verts, uv, idx);
-                    AddVertex(vertices[indices[1]], verts, uv, idx);
-                    AddVertex(vertices[indices[2]], verts, uv, idx);
+                    AddVertex(vertices[indices[0]], verts, uv, uv2, idx);
+                    AddVertex(vertices[indices[1]], verts, uv, uv2, idx);
+                    AddVertex(vertices[indices[2]], verts, uv, uv2, idx);
                     return;
                 }
 
@@ -396,9 +399,9 @@ public class PathUtils {
 
             if (pointInTriangle(vertices[i].xy, vertices[indices[0]].xy, vertices[indices[1]].xy, vertices[indices[2]].xy)) {
                 for (int j = 0; (j < 3); j++) {
-                    AddVertex(vertices[indices[(j % 3)]], verts, uv, idx);
-                    AddVertex(vertices[indices[((j + 1) % 3)]], verts, uv, idx);
-                    AddVertex(vertices[i], verts, uv, idx);
+                    AddVertex(vertices[indices[(j % 3)]], verts, uv, uv2, idx);
+                    AddVertex(vertices[indices[((j + 1) % 3)]], verts, uv, uv2, idx);
+                    AddVertex(vertices[i], verts, uv, uv2, idx);
                 }
 
                 return;
@@ -408,51 +411,51 @@ public class PathUtils {
 
         if (intersect(vertices[0].xy, vertices[2].xy, vertices[1].xy, vertices[3].xy)) {
             if ((vertices[2].cpy() - vertices[0].xy).sqrMagnitude < (vertices[3].cpy() - vertices[1].xy).sqrMagnitude) {
-                AddVertex(vertices[0], verts, uv, idx);
-                AddVertex(vertices[1], verts, uv, idx);
-                AddVertex(vertices[2], verts, uv, idx);
-                AddVertex(vertices[0], verts, uv, idx);
-                AddVertex(vertices[2], verts, uv, idx);
-                AddVertex(vertices[3], verts, uv, idx);
+                AddVertex(vertices[0], verts, uv, uv2, idx);
+                AddVertex(vertices[1], verts, uv, uv2, idx);
+                AddVertex(vertices[2], verts, uv, uv2, idx);
+                AddVertex(vertices[0], verts, uv, uv2, idx);
+                AddVertex(vertices[2], verts, uv, uv2, idx);
+                AddVertex(vertices[3], verts, uv, uv2, idx);
             } else {
-                AddVertex(vertices[0], verts, uv, idx);
-                AddVertex(vertices[1], verts, uv, idx);
-                AddVertex(vertices[3], verts, uv, idx);
-                AddVertex(vertices[1], verts, uv, idx);
-                AddVertex(vertices[2], verts, uv, idx);
-                AddVertex(vertices[3], verts, uv, idx);
+                AddVertex(vertices[0], verts, uv, uv2, idx);
+                AddVertex(vertices[1], verts, uv, uv2, idx);
+                AddVertex(vertices[3], verts, uv, uv2, idx);
+                AddVertex(vertices[1], verts, uv, uv2, idx);
+                AddVertex(vertices[2], verts, uv, uv2, idx);
+                AddVertex(vertices[3], verts, uv, uv2, idx);
             }
         } else if (intersect(vertices[0].xy, vertices[3].xy, vertices[1].xy, vertices[2].xy)) {
             if ((vertices[3].cpy() - vertices[0].xy).sqrMagnitude < (vertices[2].cpy() - vertices[1].xy).sqrMagnitude) {
-                AddVertex(vertices[0], verts, uv, idx);
-                AddVertex(vertices[1], verts, uv, idx);
-                AddVertex(vertices[3], verts, uv, idx);
-                AddVertex(vertices[0].copyFlip(), verts, uv, idx);
-                AddVertex(vertices[3].copyFlip(), verts, uv, idx);
-                AddVertex(vertices[2].copyFlip(), verts, uv, idx);
+                AddVertex(vertices[0], verts, uv, uv2, idx);
+                AddVertex(vertices[1], verts, uv, uv2, idx);
+                AddVertex(vertices[3], verts, uv, uv2, idx);
+                AddVertex(vertices[0].copyFlip(), verts, uv, uv2, idx);
+                AddVertex(vertices[3].copyFlip(), verts, uv, uv2, idx);
+                AddVertex(vertices[2].copyFlip(), verts, uv, uv2, idx);
             } else {
-                AddVertex(vertices[0], verts, uv, idx);
-                AddVertex(vertices[1], verts, uv, idx);
-                AddVertex(vertices[3], verts, uv, idx);
-                AddVertex(vertices[2].copyFlip(), verts, uv, idx);
-                AddVertex(vertices[0].copyFlip(), verts, uv, idx);
-                AddVertex(vertices[3].copyFlip(), verts, uv, idx);
+                AddVertex(vertices[0], verts, uv, uv2, idx);
+                AddVertex(vertices[1], verts, uv, uv2, idx);
+                AddVertex(vertices[3], verts, uv, uv2, idx);
+                AddVertex(vertices[2].copyFlip(), verts, uv, uv2, idx);
+                AddVertex(vertices[0].copyFlip(), verts, uv, uv2, idx);
+                AddVertex(vertices[3].copyFlip(), verts, uv, uv2, idx);
             }
 
         } else if ((vertices[1].cpy() - vertices[0].xy).sqrMagnitude < (vertices[3].cpy() - vertices[2].xy).sqrMagnitude) {
-            AddVertex(vertices[0], verts, uv, idx);
-            AddVertex(vertices[2], verts, uv, idx);
-            AddVertex(vertices[1], verts, uv, idx);
-            AddVertex(vertices[0], verts, uv, idx);
-            AddVertex(vertices[1], verts, uv, idx);
-            AddVertex(vertices[3], verts, uv, idx);
+            AddVertex(vertices[0], verts, uv, uv2, idx);
+            AddVertex(vertices[2], verts, uv, uv2, idx);
+            AddVertex(vertices[1], verts, uv, uv2, idx);
+            AddVertex(vertices[0], verts, uv, uv2, idx);
+            AddVertex(vertices[1], verts, uv, uv2, idx);
+            AddVertex(vertices[3], verts, uv, uv2, idx);
         } else {
-            AddVertex(vertices[0], verts, uv, idx);
-            AddVertex(vertices[2], verts, uv, idx);
-            AddVertex(vertices[3], verts, uv, idx);
-            AddVertex(vertices[3], verts, uv, idx);
-            AddVertex(vertices[2], verts, uv, idx);
-            AddVertex(vertices[1], verts, uv, idx);
+            AddVertex(vertices[0], verts, uv, uv2, idx);
+            AddVertex(vertices[2], verts, uv, uv2, idx);
+            AddVertex(vertices[3], verts, uv, uv2, idx);
+            AddVertex(vertices[3], verts, uv, uv2, idx);
+            AddVertex(vertices[2], verts, uv, uv2, idx);
+            AddVertex(vertices[1], verts, uv, uv2, idx);
         }
 
     }
