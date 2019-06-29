@@ -64,6 +64,7 @@ public class SystemFill : EntitySystem, EntityListener {
                 PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, indices);
             } else if (seg.GetType() == typeof(PArc)) {
                 PathUtils.ComputeArc((PArc)seg, vertices, uv, indices);
+            }else if (seg.GetType() == typeof(PLine)) {
             }
         }
 
@@ -105,6 +106,9 @@ public class SystemFill : EntitySystem, EntityListener {
 
         shape.meshFill.Clear();
         shape.meshFill.subMeshCount = 2;
+        Debug.Log("verts: " + vertices.Count);
+        Debug.Log("uv: " + uv.Count);
+        Debug.Log("uv2: " + uv2.Count);
         shape.meshFill.SetVertices(vertices);
         shape.meshFill.SetUVs(0, uv);
         shape.meshFill.SetUVs(1, uv2);
@@ -115,49 +119,43 @@ public class SystemFill : EntitySystem, EntityListener {
         shape.UpdateFill = false;
     }
 
-    private void AddAALines(Shape shape, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
-        if (shape.segments.Count > 1) {
-            for(int i=0; i< shape.segments.Count-1; i++) {
-                if(shape.segments[i].GetType() == typeof(PArc)) {
-                    AddLineVert(shape.segments[i].StartPoint.f3(), vertices, uv, indices);
-                    AddLineVert(new Vector3((float)((PArc)shape.segments[i]).CenterX, (float)((PArc)shape.segments[i]).CenterY, 1), vertices, uv, indices);
-                    AddLineVert(shape.segments[i].EndPoint.f3(), vertices, uv, indices);
-                } else {
-                    vertices.Add(shape.segments[0].StartPoint.f3());
-                    vertices.Add(shape.segments[i].EndPoint.f3());
-                    vertices.Add(shape.segments[i + 1].EndPoint.f3());
-
-                    uv.Add(new Vector4(1, 1, 1, 0));
-                    uv.Add(new Vector4(1, 1, 1, 0));
-                    uv.Add(new Vector4(1, 1, 1, 0));
-
-                    indices.Add(indices.Count);
-                    indices.Add(indices.Count);
-                    indices.Add(indices.Count);
-                }
-            }
-        }  
-    }
-
     private void FillShape(Shape shape, List<Vector3> vertices, List<Vector4> uv, List<Vector2> uv2, List<int> indices) {
         if (shape.segments.Count > 1) {
             for(int i=0; i< shape.segments.Count-1; i++) {
                 if(shape.segments[i].GetType() == typeof(PArc)) {
-                    AddLineVert(shape.segments[i].StartPoint.f3(), vertices, uv, indices);
-                    AddLineVert(new Vector3((float)((PArc)shape.segments[i]).CenterX, (float)((PArc)shape.segments[i]).CenterY, 1), vertices, uv, indices);
-                    AddLineVert(shape.segments[i].EndPoint.f3(), vertices, uv, indices);
+                    // AddLineVert(shape.segments[i].StartPoint.f3(), vertices, uv, indices);
+                    // AddLineVert(new Vector3((float)((PArc)shape.segments[i]).CenterX, (float)((PArc)shape.segments[i]).CenterY, 1), vertices, uv, indices);
+                    // AddLineVert(shape.segments[i].EndPoint.f3(), vertices, uv, indices);
                 } else {
                     vertices.Add(shape.segments[0].StartPoint.f3());
                     vertices.Add(shape.segments[i].EndPoint.f3());
                     vertices.Add(shape.segments[i + 1].EndPoint.f3());
 
-                    uv.Add(new Vector4(1, 1, 1, 0));
-                    uv.Add(new Vector4(1, 1, 1, 0));
-                    uv.Add(new Vector4(1, 1, 1, 0));
+                    if(i == shape.segments.Count-2 && shape.segments.Count > 1){
+                        uv.Add(new Vector4(1, 1, 1, 6));
+                        uv.Add(new Vector4(1, 1, 1, 6));
+                        uv.Add(new Vector4(1, 1, 1, 6));
 
-                    uv2.Add(new Vector2(1, 1));
-                    uv2.Add(new Vector2(1, 1));
-                    uv2.Add(new Vector2(1, 1));
+                        uv2.Add(new Vector2(1, 0));
+                        uv2.Add(new Vector2(1, 1));
+                        uv2.Add(new Vector2(1, 0));
+                    }else if(shape.segments[i+1].GetType() == typeof(PLine)){
+                        uv.Add(new Vector4(1, 1, 1, 6));
+                        uv.Add(new Vector4(1, 1, 1, 6));
+                        uv.Add(new Vector4(1, 1, 1, 6));
+
+                        uv2.Add(new Vector2(1, 1));
+                        uv2.Add(new Vector2(1, 0));
+                        uv2.Add(new Vector2(1, 0));
+                    }else {
+                        uv.Add(new Vector4(1, 1, 1, 0));
+                        uv.Add(new Vector4(1, 1, 1, 0));
+                        uv.Add(new Vector4(1, 1, 1, 0));
+
+                        uv2.Add(new Vector2(1, 1));
+                        uv2.Add(new Vector2(1, 1));
+                        uv2.Add(new Vector2(1, 1));
+                    }
 
                     indices.Add(indices.Count);
                     indices.Add(indices.Count);

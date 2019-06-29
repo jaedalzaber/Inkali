@@ -63,6 +63,15 @@
 			{
 				if (i.uv.w == 0)
 					discard;
+				if (i.uv.w == 6){
+					float dist = distance(i.uv2.xy, fixed2(1, 1));
+					float delta = fwidth(dist);
+					float alpha = smoothstep(0, delta, i.uv2.y);
+					if(i.uv2.y < delta){
+						return fixed4(0,1,1, alpha  * _inColor.w);
+					} else discard;
+					// return fixed4(_inColor.xyz, 0  * _inColor.w);
+				}
 				if (i.uv.w == 1) {
 					// float dist = distance(i.uv2.xy, fixed2(1, 1));
 					// float delta = fwidth(dist);
@@ -254,6 +263,15 @@
 			{
 				if (i.uv.w == 5 || i.uv.w == 0)
 					discard;
+				if (i.uv.w == 6){
+					float dist = distance(i.uv2.xy, fixed2(1, 1));
+					float delta = fwidth(dist);
+					float alpha = smoothstep(0, delta, i.uv2.y);
+					if(i.uv2.y < delta){
+						return fixed4(0,1,1, (1-alpha)  * _inColor.w);
+					} else discard;
+					// return fixed4(_inColor.xyz, 0  * _inColor.w);
+				}
 				if (i.uv.w == 1) {
 					// float dist = distance(i.uv2.xy, fixed2(1, 1));
 					// float delta = fwidth(dist);

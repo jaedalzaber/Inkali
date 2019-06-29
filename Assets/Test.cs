@@ -73,10 +73,10 @@ public class Test : MonoBehaviour {
         p1.Add(new PCubic(new Vector2d(0,1), new Vector2d(0,2), new Vector2d(2,2), new Vector2d(2,0)));
         p1.Add(new PCubic(new Vector2d(5, -2), new Vector2d(2, -3), new Vector2d(0, -2)));
         p1.Add(new PCubic(new Vector2d(-1, 2), new Vector2d(3, 3), new Vector2d(4, 1)));
-        // p1.Add(new PLine(new Vector2d(2, -1)));
-        p1.Add(new PCubic(new Vector2d(4, -4), new Vector2d(0, -4), new Vector2d(-.5f, 1)));
+        p1.Add(new PLine(new Vector2d(2.5f, -3f)));
+        p1.Add(new PCubic(new Vector2d(1, -4), new Vector2d(0, -4), new Vector2d(-.5f, 1)));
         p1.Add(new PCubic(new Vector2d(0, -3), new Vector2d(4, -3), new Vector2d(4, 0)));
-        p1.Add(new PCubic(new Vector2d(0, 0), new Vector2d(0, -3), new Vector2d(-1, -1)));
+        p1.Add(new PCubic(new Vector2d(0, 0), new Vector2d(0, -3), new Vector2d(-1, 0.5f)));
 
         paint = new PaintSolid(Color.cyan);
         p1.FillPaint = paint;
