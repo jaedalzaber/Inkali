@@ -48,11 +48,16 @@ public class SystemFill : EntitySystem, EntityListener {
         uv.Clear();
         indices.Clear();
 
-        
+        BBoxResult res = shape.segments.Count>0 ? PathUtils.bbox((PCubic)shape.segments[0]) : null;
 
         foreach (Segment seg in shape.segments) {
             if(seg.GetType() == typeof(PCubic)) {
                 PathUtils.ComputeCubic((PCubic)seg, vertices, uv, indices);
+                BBoxResult r = PathUtils.bbox((PCubic)seg);
+                if(r.x.max > res.x.max) res.x.max = r.x.max;
+                if(r.y.max > res.y.max) res.y.max = r.y.max;
+                if(r.x.min < res.x.min) res.x.min = r.x.min;
+                if(r.y.min < res.y.min) res.y.min = r.y.min;
             } else if (seg.GetType() == typeof(PQuadratic)) {
                 PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, indices);
             } else if (seg.GetType() == typeof(PArc)) {
@@ -76,16 +81,31 @@ public class SystemFill : EntitySystem, EntityListener {
         // idx[3] = indices.Count;
         // idx[4] = indices.Count + 2;
         // idx[5] = indices.Count + 3;
-        float z = 0f;
-        float t = .1f;
-        for (int i = 0; i < vertices.Count; i+=3)
-        {
-            vertices[i] = new Vector3(vertices[i].x, vertices[i].y, vertices[i].z+z);
-            z+=t;
-            vertices[i+1] = new Vector3(vertices[i+1].x, vertices[i+1].y, vertices[i+1].z+z);
-            z+=t;
-            vertices[i+2] = new Vector3(vertices[i+2].x, vertices[i+2].y, vertices[i+2].z+z);
-            z+=t;
+
+        if(res != null){
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, 1.1f));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, 1.1f));
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.max, 1.1f));
+
+            uv.Add(new Vector4(1, 1, 1, 5));
+            uv.Add(new Vector4(1, 1, 1, 5));
+            uv.Add(new Vector4(1, 1, 1, 5));
+
+            indices.Add(indices.Count);
+            indices.Add(indices.Count);
+            indices.Add(indices.Count);       
+
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, 1.1f));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.min, 1.1f));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, 1.1f));
+
+            uv.Add(new Vector4(1, 1, 1, 5));
+            uv.Add(new Vector4(1, 1, 1, 5));
+            uv.Add(new Vector4(1, 1, 1, 5));
+
+            indices.Add(indices.Count);
+            indices.Add(indices.Count);
+            indices.Add(indices.Count);    
         }
 
         shape.meshFill.Clear();

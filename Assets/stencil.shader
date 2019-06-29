@@ -16,8 +16,8 @@
 				Ref 0
 				Comp Always
 				Pass Invert
-				Fail Invert
-				ZFail Invert
+				Fail Keep
+				ZFail Keep
 				WriteMask 1
 			}
 
@@ -56,6 +56,9 @@
 
 			fixed4 frag(v2f i) : SV_Target
 			{   
+				if (i.uv.w == 5) {
+					discard;
+				 }
 				if (i.uv.w == 1) {
 					float3 px = ddx(i.uv.xyz);
 					float3 py = ddy(i.uv.xyz);
@@ -67,6 +70,11 @@
 					float sd = (i.uv.x * i.uv.x * i.uv.x - i.uv.y * i.uv.z) / sqrt(fx*fx + fy * fy);
 					float alpha = 0.2 - sd;
 					fixed4 col = fixed4(_inColor.xyz, 1);
+
+					// float t = i.uv.x * i.uv.x * i.uv.x - i.uv.y * i.uv.z;
+					// float a = clamp(sign(t), 0.0, 1.0);
+					// if(a==1.0) discard;
+
 					if (alpha < 0)  // Outside
 						discard;
 					return col;

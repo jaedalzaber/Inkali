@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class Test : MonoBehaviour {
     Engine engine;
     private ImmutableArray<Entity> entities;
@@ -77,7 +76,7 @@ public class Test : MonoBehaviour {
         // p1.Add(new PLine(new Vector2d(2, -1)));
         p1.Add(new PCubic(new Vector2d(4, -4), new Vector2d(0, -4), new Vector2d(-.5f, 1)));
         p1.Add(new PCubic(new Vector2d(0, -3), new Vector2d(4, -3), new Vector2d(4, 1)));
-        p1.Add(new PCubic(new Vector2d(0, 0), new Vector2d(0, -3), new Vector2d(4, -4)));
+        p1.Add(new PCubic(new Vector2d(0, 0), new Vector2d(0, -3), new Vector2d(0, 1)));
 
         paint = new PaintSolid(Color.cyan);
         p1.FillPaint = paint;

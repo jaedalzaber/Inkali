@@ -11,11 +11,10 @@
 		Tags { "RenderType"="Opaque" "Queue" = "Transparent+1" }
 		LOD 100
 		
-		
 		Pass
 		{
 			Cull off
-			ZWrite on
+			// ZWrite off
 			Blend SrcAlpha OneMinusSrcAlpha
 			//ColorMask RGBA
 			// ZTest Always  
@@ -75,16 +74,18 @@
 					float sd = (i.uv.x * i.uv.x * i.uv.x - i.uv.y * i.uv.z) / sqrt(fx*fx + fy * fy);
 					float alpha = .2 - sd;
 
-
-					if (alpha > 1)       // Inside
-						alpha = 1;
-					else if (alpha < 0)  // Outside
+					if (alpha < 0)  // Outside
 						discard;
-					else {
-						// Near boundary
+
+					else if (alpha <= 1)       // Inside
 						alpha = alpha;
-						// return fixed4(1,0,0, alpha);
-					}
+					else 
+						discard;
+					// else {
+					// 	// Near boundary
+						
+					// 	// return fixed4(1,0,0, alpha);
+					// }
 					return fixed4(_inColor.xyz, alpha * _inColor.w);
 				}
 
@@ -236,7 +237,7 @@
 			v2f vert (appdata v)
 			{
 				v2f o;
-				float4 u = float4(v.vertex.x, v.vertex.y, v.vertex.z-1, 1);
+				float4 u = float4(v.vertex.x, v.vertex.y, v.vertex.z, 1);
 				float4 vert = UnityObjectToClipPos(u);
 				o.vertex = vert;
 				o.uv = v.uv;
@@ -245,8 +246,8 @@
 			
 			fixed4 frag(v2f i) : SV_Target
 			{
-				/*if (i.uv.w == 0)
-					discard;*/
+				if (i.uv.w == 5)
+					discard;
 				if (i.uv.w == 1) {
 					float3 px = ddx(i.uv.xyz);
 					float3 py = ddy(i.uv.xyz);
