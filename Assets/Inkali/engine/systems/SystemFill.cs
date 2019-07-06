@@ -55,17 +55,16 @@ public class SystemFill : EntitySystem, EntityListener {
         foreach (Segment seg in shape.segments) {
             if(seg.GetType() == typeof(PCubic)) {
                 PathUtils.ComputeCubic((PCubic)seg, vertices, uv, uv2, indices);
-                BBoxResult r = PathUtils.bbox((PCubic)seg);
+            } else if (seg.GetType() == typeof(PQuadratic)) {
+                PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, uv2, indices);
+            } else if (seg.GetType() == typeof(PArc)) {
+                PathUtils.ComputeArc((PArc)seg, vertices, uv, indices);
+            }
+            BBoxResult r = PathUtils.bbox(seg);
                 if(r.x.max > res.x.max) res.x.max = r.x.max;
                 if(r.y.max > res.y.max) res.y.max = r.y.max;
                 if(r.x.min < res.x.min) res.x.min = r.x.min;
                 if(r.y.min < res.y.min) res.y.min = r.y.min;
-            } else if (seg.GetType() == typeof(PQuadratic)) {
-                PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, indices);
-            } else if (seg.GetType() == typeof(PArc)) {
-                PathUtils.ComputeArc((PArc)seg, vertices, uv, indices);
-            }else if (seg.GetType() == typeof(PLine)) {
-            }
         }
 
         FillShape(shape, vertices, uv, uv2, indices);

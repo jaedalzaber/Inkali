@@ -183,10 +183,6 @@ public class PCubic : Segment {
         return startPoint * (dt2 * dt) + ctrl1 * (3 * dt2 * t) + ctrl2 * (3 * dt * t2) + endPoint * (t2 * t);
     }
 
-    internal List<Vector2d> getArray() {
-        return new List<Vector2d>(points);
-    }
-
     internal void reverse() {
         Vector2d tmp = new Vector2d(startPoint);
         startPoint = endPoint;
@@ -198,5 +194,15 @@ public class PCubic : Segment {
         points[1] = this.ctrl1;
         points[2] = this.ctrl2;
         points[3] = this.endPoint;
+    }
+
+    public override List<Vector2d> getPointsList()
+    {
+        return new List<Vector2d>(points);
+    }
+
+    public override Vector2d[] getPoints()
+    {
+        return points;
     }
 }

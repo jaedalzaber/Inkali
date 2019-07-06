@@ -51,7 +51,7 @@ public class SystemStroke : EntitySystem, EntityListener {
             if(seg.GetType() == typeof(PCubic)) {
                 PathUtils.ComputeCubic((PCubic)seg, vertices, uv, uv2, indices);
             } else if (seg.GetType() == typeof(PQuadratic)) {
-                PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, indices);
+                PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, uv2, indices);
             } else if (seg.GetType() == typeof(PArc)) {
                 PathUtils.ComputeArc((PArc)seg, vertices, uv, indices);
             }

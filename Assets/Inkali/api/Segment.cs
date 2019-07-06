@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public abstract class Segment {
     protected Vector2d startPoint;
@@ -26,4 +27,7 @@ public abstract class Segment {
             endPoint = value;
         }
     }
+
+    public abstract List<Vector2d> getPointsList();
+    public abstract Vector2d[] getPoints();
 }

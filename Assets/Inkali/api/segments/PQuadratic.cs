@@ -1,17 +1,48 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PQuadratic : Segment {
     private Vector2d ctrl1 = new Vector2d();
+    private Vector2d[] points = new Vector2d[3]; 
+
+    public override Vector2d StartPoint {
+        get {
+            return base.StartPoint;
+        }
+
+        set {
+            points[0] = value;
+            base.StartPoint = value;
+        }
+    }
+
     public Vector2d Ctrl1 {
         get { return ctrl1; }
-        set { ctrl1 = value; }
+        set { 
+            points[1] = value;
+            ctrl1 = value; 
+        }
+    }
+
+    public override Vector2d EndPoint {
+        get {
+            return base.EndPoint;
+        }
+
+        set {
+            points[2] = value;
+            base.EndPoint = value;
+        }
     }
 
     public PQuadratic(Vector2d ctrl1, Vector2d endPoint) {
         this.ctrl1 = ctrl1;
         this.endPoint = endPoint;
+        points[0] = startPoint;
+        points[1] = ctrl1;
+        points[2] = endPoint;
     }
 
     public PQuadratic(Vector2d startPoint, Vector2d ctrl1, Vector2d endPoint) {
@@ -19,6 +50,9 @@ public class PQuadratic : Segment {
             this.startPoint = startPoint;
         this.ctrl1 = ctrl1;
         this.endPoint = endPoint;
+        points[0] = startPoint;
+        points[1] = ctrl1;
+        points[2] = endPoint;
     }
 
     private Vector2d tmp = new Vector2d(), tmp2 = new Vector2d();
@@ -47,5 +81,15 @@ public class PQuadratic : Segment {
     public override Vector2d ValueAt(double t) {
         double dt = 1f - t;
         return startPoint * (dt * dt)+ ctrl1 * (2 * dt * t) + endPoint * (t * t);
+    }
+
+    public override List<Vector2d> getPointsList()
+    {
+        return new List<Vector2d>(points);
+    }
+
+    public override Vector2d[] getPoints()
+    {
+        return points;
     }
 }

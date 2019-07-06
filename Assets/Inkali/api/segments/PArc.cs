@@ -220,4 +220,14 @@ public class PArc : Segment {
         this.angleExtent = angleExtent;
 
     }
+
+    public override List<Vector2d> getPointsList()
+    {
+        return new List<Vector2d>(new Vector2d[]{this.startPoint, this.endPoint});
+    }
+
+    public override Vector2d[] getPoints()
+    {
+        return new Vector2d[]{this.startPoint, this.endPoint};
+    }
 }
