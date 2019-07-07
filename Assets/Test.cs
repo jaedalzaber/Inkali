@@ -66,21 +66,30 @@ public class Test : MonoBehaviour {
 	void Start () {
         engine = new Engine();
         SystemFill systemFill = new SystemFill();
+        SystemStroke systemStroke = new SystemStroke();
         engine.addSystem(systemFill);
+        engine.addSystem(systemStroke);
         engine.addEntityListener(Family.all(typeof(CompFill)).get(), systemFill);
+        engine.addEntityListener(Family.all(typeof(CompStroke)).get(), systemStroke);
+
 
         p1 = engine.CreatePath("p1");
-        p1.Add(new PCubic(new Vector2d(0,1), new Vector2d(0,2), new Vector2d(2,2), new Vector2d(2,0)));
-        p1.Add(new PCubic(new Vector2d(5, -2), new Vector2d(2, -3), new Vector2d(0, -2)));
-        p1.Add(new PCubic(new Vector2d(-1, 2), new Vector2d(3, 3), new Vector2d(4, 1)));
-        p1.Add(new PLine(new Vector2d(2.5f, -1f)));
-        p1.Add(new PQuadratic(new Vector2d(1, -3), new Vector2d(-1f, -1)));
-        p1.Add(new PCubic(new Vector2d(0, -3), new Vector2d(4, -4), new Vector2d(4, 0)));
-        p1.Add(new PCubic(new Vector2d(0, 0), new Vector2d(0, -3), new Vector2d(-1, 1.5f)));
+        // p1.Add(new PCubic(new Vector2d(0,1), new Vector2d(0,2), new Vector2d(2,2), new Vector2d(2,0)));
+        // p1.Add(new PCubic(new Vector2d(5, -2), new Vector2d(2, -3), new Vector2d(0, -2)));
+        // p1.Add(new PCubic(new Vector2d(-1, 2), new Vector2d(3, 3), new Vector2d(4, 1)));
+        // // p1.Add(new PLine(new Vector2d(2.5f, -1f)));
+        // p1.Add(new PQuadratic(new Vector2d(1, -3), new Vector2d(-1f, -1)));
+        // p1.Add(new PCubic(new Vector2d(0, -3), new Vector2d(4, -4), new Vector2d(4, 0)));
+        // p1.Add(new PCubic(new Vector2d(0, 0), new Vector2d(0, -3), new Vector2d(-1, 1.5f)));
 
         paint = new PaintSolid(Color.cyan);
         p1.FillPaint = paint;
 
+        List<Segment> s = PathUtils.outline(new PQuadratic(new Vector2d(0,0), new Vector2d(0,2), new Vector2d(2,0)), .05f);
+        foreach (Segment ss in s)
+        {
+            p1.Add(ss);
+        }
         // Path p2 = engine.CreatePath("p2");
         // p2.Add(new PArc(new Vector2d(0, 0), new Vector2d(1, 1), 2, 2, 0, true, PArc.SweepDirection.ANTI_CLOCKWISE));
         // p2.Add(new PArc(new Vector2d(0, 0), new Vector2d(-.5, 2), 2, 2, 0, true, PArc.SweepDirection.CLOCKWISE));

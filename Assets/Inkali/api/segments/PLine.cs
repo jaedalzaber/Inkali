@@ -3,8 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PLine : Segment {
+
+    private Vector2d[] points = new Vector2d[2]; 
+
     public PLine(Vector2d endPoint) {
         this.endPoint = endPoint;
+        points[0] = startPoint;
+        points[1] = endPoint;
     }
     public override double ApproxLength(int samples) {
         throw new System.NotImplementedException();
@@ -29,6 +34,37 @@ public class PLine : Segment {
 
     public override Vector2d[] getPoints()
     {
-        return new Vector2d[]{this.startPoint, this.endPoint};
+        return points;
+    }
+
+    public override void reverse()
+    {
+        Vector2d tmp = new Vector2d(startPoint);
+        startPoint = endPoint;
+        endPoint = tmp;
+        points[0] = this.startPoint;
+        points[1] = this.endPoint;
+    }
+
+    public override Vector2d StartPoint {
+        get {
+            return base.StartPoint;
+        }
+
+        set {
+            points[0] = value;
+            base.StartPoint = value;
+        }
+    }
+
+    public override Vector2d EndPoint {
+        get {
+            return base.EndPoint;
+        }
+
+        set {
+            points[1] = value;
+            base.EndPoint = value;
+        }
     }
 }

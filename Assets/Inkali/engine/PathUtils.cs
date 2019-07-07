@@ -556,7 +556,7 @@ public class PathUtils {
 
     }
 
-    public static double arcfn(PCubic c, double t) {
+    public static double arcfn(Segment c, double t) {
         Vector2d d = derivative(c, t);
         double l = d.x * d.x + d.y * d.y;
         return Mathd.Sqrt(l);
@@ -570,11 +570,31 @@ public class PathUtils {
 	 * .add(c.end.cpy().sub(c.ctrl2).scl(t2 * 3f)); }
 	 */
 
-    public static Vector2d derivative(PCubic cb, double t) {
-        double mt = 1 - t, a = mt * mt, b = mt * t * 2, c = t * t;
+    public static Vector2d derivative(Segment cb, double t) {
+        int order = cb.getPoints().Length - 1;
+        double mt = 1 - t;
+        double a=0, b=0, c=0;
+
+
         List<Vector2d> pp = derive(cb)[0];
-        Vector2d[] p = new Vector2d[] { pp[0], pp[1], pp[2] };
-        return new Vector2d((a * p[0].x + b * p[1].x + c * p[2].x), (a * p[0].y + b * p[1].y + c * p[2].y));
+        if(order == 1) {
+            Vector2d[] p = new Vector2d[] { pp[0], pp[1], pp[2] };
+            return new Vector2d((a * p[0].x + b * p[1].x + c * p[2].x), (a * p[0].y + b * p[1].y + c * p[2].y));
+        }
+        if(order == 2) {
+            Vector2d[] p = new Vector2d[] { pp[0], pp[1], Vector2d.zero };
+            a = mt;
+            b = t;
+            return new Vector2d((a * p[0].x + b * p[1].x + c * p[2].x), (a * p[0].y + b * p[1].y + c * p[2].y));
+        }
+        if(order == 3) {
+            Vector2d[] p = new Vector2d[] { pp[0], pp[1], pp[2] };
+            a = mt * mt; 
+            b = mt * t * 2; 
+            c = t * t;
+            return new Vector2d((a * p[0].x + b * p[1].x + c * p[2].x), (a * p[0].y + b * p[1].y + c * p[2].y));
+        }
+        return Vector2d.zero;
     }
 
     // public static Vector2d compute(double t, Segment curve) {
@@ -647,6 +667,7 @@ public class PathUtils {
             }
             double x = (a * p[0].x + b * p[1].x + c * p[2].x + d * p[3].x);
             double y = (a * p[0].y + b * p[1].y + c * p[2].y + d * p[3].y);
+            
             return new Vector2d(x, y);
         }
 
@@ -656,7 +677,7 @@ public class PathUtils {
     public static List<List<Vector2d>> derive(Segment seg) {
         List<List<Vector2d>> dpoints = new List<List<Vector2d>>();
         List<Vector2d> p = seg.getPointsList();
-        Debug.Log(seg.GetType()+": " + p.Count);
+        // Debug.Log(seg.GetType()+": " + p.Count);
         for (int d = p.Count, c = d - 1; d > 1; d--, c--) {
             List<Vector2d> list = new List<Vector2d>();
             for (int j = 0; j < c; j++) {
@@ -687,7 +708,7 @@ public class PathUtils {
 	 * tempLength; }
 	 */
 
-    public static double length(PCubic c, int step) {
+    public static double length(Segment c, int step) {
         double z = 0.5f, sum = 0, len = Tvalues.Length, t;
         for (int i = 0; i < len; i++) {
             t = z * Tvalues[i] + z;
@@ -944,14 +965,14 @@ public class PathUtils {
         return arr;
     }
 
-    public static XtrmResult ExtremaCubic(Segment c) {
+    public static XtrmResult Extrema(Segment c) {
         int order = c.getPoints().Length-1;
         XtrmResult result = new XtrmResult();
         DoubleArray roots = new DoubleArray();
         for (int i = 0; i < 2; i++) {
             List<Vector2d> dpoints = derive(c)[0];
             DoubleArray p = new DoubleArray();
-            Debug.Log("dpoint x size: " + dpoints.Count);
+            // Debug.Log("dpoint x size: " + dpoints.Count);
             
             for (int j = 0; j < dpoints.Count; j++) {
                 if (i == 0)
@@ -1007,68 +1028,8 @@ public class PathUtils {
         return result;
     }
 
-    public static XtrmResult ExtremaQuadratic(PQuadratic c) {
-        XtrmResult result = new XtrmResult();
-        DoubleArray roots = new DoubleArray();
-        for (int i = 0; i < 2; i++) {
-            List<Vector2d> dpoints = derive(c)[0];
-            DoubleArray p = new DoubleArray();
-
-            for (int j = 0; j < dpoints.Count; j++) {
-                if (i == 0)
-                    p.add(dpoints[j].x);
-                else
-                    p.add(dpoints[j].y);
-            }
-            if (i == 0) {
-                DoubleArray x = Droots(p);
-                for (int j = 0; j < x.size; j++)
-                    if (x.get(j) >= 0.0 && x.get(j) <= 1.0)
-                        result.x.add(x.get(j));
-                roots.addAll(numberSort(result.x));
-            } else {
-                DoubleArray y = Droots(p);
-                for (int j = 0; j < y.size; j++)
-                    if (y.get(j) >= 0.0 && y.get(j) <= 1.0)
-                        result.y.add(y.get(j));
-                roots.addAll(numberSort(result.y));
-            }
-            dpoints = derive(c)[1];
-            p = new DoubleArray();
-
-            for (int j = 0; j < dpoints.Count; j++) {
-                if (i == 0)
-                    p.add(dpoints[j].x);
-                else
-                    p.add(dpoints[j].y);
-            }
-            if (i == 0) {
-                DoubleArray x = Droots(p);
-                for (int j = 0; j < x.size; j++)
-                    if (x.get(j) >= 0.0 && x.get(j) <= 1.0)
-                        result.x.add(x.get(j));
-                roots.addAll(numberSort(result.x));
-            } else {
-                DoubleArray y = Droots(p);
-                for (int j = 0; j < y.size; j++)
-                    if (y.get(j) >= 0.0 && y.get(j) <= 1.0)
-                        result.y.add(y.get(j));
-                roots.addAll(numberSort(result.y));
-            }
-
-            DoubleArray v = new DoubleArray();
-            for (int j = 0; j < roots.size; j++) {
-                if (roots.indexOf(roots.get(j)) == j)
-                    v.add(roots.get(j));
-            }
-            result.values = numberSort(v);
-        }
-        //		System.out.println("extrema: " +result.values.Count);
-        return result;
-    }
-
     public static BBoxResult bbox(Segment c) {
-        XtrmResult extrema = ExtremaCubic(c);
+        XtrmResult extrema = Extrema(c);
         BBoxResult result = new BBoxResult();
         result.x = getMinMax(c, 0, extrema.x);
         result.y = getMinMax(c, 1, extrema.y);
@@ -1076,7 +1037,7 @@ public class PathUtils {
     }
 
     public static BBoxResult bbox(Segment c, BBoxResult res) {
-        XtrmResult extrema = ExtremaCubic(c);
+        XtrmResult extrema = Extrema(c);
         res.x = getMinMax(c, 0, extrema.x);
         res.y = getMinMax(c, 1, extrema.y);
         return res;
@@ -1124,7 +1085,7 @@ public class PathUtils {
         return a;
     }
 
-    public static List<Vector2d> hull(PCubic c, double t) {
+    public static List<Vector2d> hull(Segment c, double t) {
         List<Vector2d> p = c.getPointsList();
         List<Vector2d> _p = new List<Vector2d>();
         Vector2d pt;
@@ -1132,7 +1093,9 @@ public class PathUtils {
         q.Add(p[0]);
         q.Add(p[1]);
         q.Add(p[2]);
-        q.Add(p[3]);
+        if (p.Count - 1 == 3) {
+            q.Add(p[3]);
+        }
 
         while (p.Count > 1) {
             _p = new List<Vector2d>();
@@ -1146,22 +1109,28 @@ public class PathUtils {
         return q;
     }
 
-    public static SplitResult split(PCubic c, double t) {
+    public static SplitResult split(Segment c, double t) {
+        int order = c.getPoints().Length - 1;
         List<Vector2d> q = hull(c, t);
         SplitResult result = new SplitResult();
         if (t == 0.0)
-            result.right = new PCubic(c);
+            result.right = c;
         else if (t == 1.0)
-            result.left = new PCubic(c);
+            result.left = c;
         else {
-            result.left = new PCubic(q[0], q[4], q[7], q[9]);
-            result.right = new PCubic(q[9], q[8], q[6], q[3]);
+            result.left = order == 2 
+                ? (Segment)new PQuadratic(q[0], q[3], q[5]) 
+                : (Segment)new PCubic(q[0], q[4], q[7], q[9]);
+            result.right = order == 2 
+                ? (Segment)new PQuadratic(q[5], q[4], q[2]) 
+                : (Segment)new PCubic(q[9], q[8], q[6], q[3]);
             result.span = q;
         }
         return result;
     }
 
-    public static PCubic split(PCubic c, double t1, double t2) {
+    public static Segment split(Segment c, double t1, double t2) {
+        int order = c.getPoints().Length - 1;
         if (t1 == 0.0 && t2 != 0.0)
             return split(c, t2).left;
         if (t2 == 1.0)
@@ -1169,8 +1138,12 @@ public class PathUtils {
 
         List<Vector2d> q = hull(c, t1);
         SplitResult result = new SplitResult();
-        result.left = new PCubic(q[0], q[4], q[7], q[9]);
-        result.right = new PCubic(q[9], q[8], q[6], q[3]);
+        result.left = order == 2 
+            ? (Segment)new PQuadratic(q[0], q[3], q[5]) 
+            : (Segment)new PCubic(q[0], q[4], q[7], q[9]);
+        result.right = order == 2 
+            ? (Segment)new PQuadratic(q[5], q[4], q[2]) 
+            : (Segment)new PCubic(q[9], q[8], q[6], q[3]);
         result.span = q;
 
         if (t2 == 0.0)
@@ -1181,13 +1154,13 @@ public class PathUtils {
         return subsplit.left;
     }
 
-    public static List<PCubic> reduce(PCubic c) {
+    public static List<Segment> reduce(Segment c) {
         double t1 = 0, t2 = 0, step = .01;
-        PCubic segment;
-        List<PCubic> pass1 = new List<PCubic>();
-        List<PCubic> pass2 = new List<PCubic>();
+        Segment segment;
+        List<Segment> pass1 = new List<Segment>();
+        List<Segment> pass2 = new List<Segment>();
 
-        DoubleArray extrema = ExtremaCubic(c).values;
+        DoubleArray extrema = Extrema(c).values;
         if (extrema.indexOf(0.0) == -1) {
             extrema.insert(0, 0.0);
         }
@@ -1205,7 +1178,7 @@ public class PathUtils {
         }
     //		System.out.println("Pass1 Count: " + pass1.Count);
     for (int i = 0; i < pass1.Count; i++) {
-            PCubic p1 = pass1[i];
+            Segment p1 = pass1[i];
             t1 = 0.0;
             t2 = 0.0;
         B: while (t2 <= 1.0) {
@@ -1276,24 +1249,25 @@ public class PathUtils {
         return new Vector2d(num / dnm, dnm / num);
     }
 
-    public static bool simple(PCubic segment) {
-        PCubic c = segment;
-
-        double a1 = Angle(c.points[0], c.points[3], c.points[1]);
-        double a2 = Angle(c.points[0], c.points[3], c.points[2]);
+    public static bool simple(Segment s) {
+        int order = s.getPoints().Length - 1;
+        if(order == 3){
+            double a1 = Angle(s.getPoints()[0], s.getPoints()[3], s.getPoints()[1]);
+            double a2 = Angle(s.getPoints()[0], s.getPoints()[3], s.getPoints()[2]);
         //		System.out.println("angles: "+ a1 +", "+a2);
-        if ((a1 > 0.0 && a2 < 0.0) || (a1 < 0.0 && a2 > 0.0))
-            return false;
-
-        double[] n1 = normal(c, 0.0);
-        double[] n2 = normal(c, 1.0);
-        double s = n1[0] * n2[0] + n1[1] * n2[1];
-        double angle = Mathd.Abs(Mathd.Acos(s));
+            if ((a1 > 0.0 && a2 < 0.0) || (a1 < 0.0 && a2 > 0.0))
+                return false;
+        }
+        
+        double[] n1 = normal(s, 0.0);
+        double[] n2 = normal(s, 1.0);
+        double ss = n1[0] * n2[0] + n1[1] * n2[1];
+        double angle = Mathd.Abs(Mathd.Acos(ss));
 
         return angle < Mathd.PI / 4.5;
     }
 
-    public static double[] normal(PCubic c, double t) {
+    public static double[] normal(Segment c, double t) {
         Vector2d d = derivative(c, t);
         double q = Mathd.Sqrt(d.x * d.x + d.y * d.y);
         return new double[] { -d.y / q, d.x / q };
@@ -1306,8 +1280,8 @@ public class PathUtils {
 
     private static List<Vector2d> np = new List<Vector2d>();
 
-    public static PCubic raise(PCubic c) {
-        Vector2d[] p = c.points;
+    public static Segment raise(Segment c) {
+        Vector2d[] p = c.getPoints();
         np.Clear();
         np.Add(p[0]);
         int k = p.Length;
@@ -1318,63 +1292,67 @@ public class PathUtils {
             np.Add(new Vector2d((k - i) / k * pi.x + i / k * pim.x, (k - i) / k * pi.y + i / k * pim.y));
         }
         np.Insert(k, p[k - 1]);
-        return new PCubic(np);
+        return p.Length - 1 == 3 ? (Segment)new PCubic(np) : (Segment)new PQuadratic(np);
     }
 
-    public static List<PCubic> offset(PCubic c, double d) {
-        Vector2d[] points = c.points;
-        bool _linear = true;
-        List<Vector2d> a = Align(c, new Line(points[0], points[3]));
-        List<Vector2d> p = new List<Vector2d>();
-        for (int i = 0; i < a.Count; i++) {
-            if (Mathd.Abs(a[i].y) > 0.0001f) {
-                _linear = false;
-            }
-        }
+    // public static List<PCubic> offset(PCubic c, double d) {
+    //     Vector2d[] points = c.points;
+    //     bool _linear = true;
+    //     List<Vector2d> a = Align(c, new Line(points[0], points[3]));
+    //     List<Vector2d> p = new List<Vector2d>();
+    //     for (int i = 0; i < a.Count; i++) {
+    //         if (Mathd.Abs(a[i].y) > 0.0001f) {
+    //             _linear = false;
+    //         }
+    //     }
 
-        if (_linear) {
-            for (int i = 0; i < c.points.Length; i++) {
-                double[] nv = normal(c, 0.0);
-                p.Add(new Vector2d((c.points[i].x + d * nv[0]), (c.points[i].y + d * nv[1])));
-            }
-            PCubic s = new PCubic(new PCubic(p));
-            List<PCubic> arr = new List<PCubic>();
-            arr.Add(s);
-            return arr;
-        }
+    //     if (_linear) {
+    //         for (int i = 0; i < c.points.Length; i++) {
+    //             double[] nv = normal(c, 0.0);
+    //             p.Add(new Vector2d((c.points[i].x + d * nv[0]), (c.points[i].y + d * nv[1])));
+    //         }
+    //         PCubic s = new PCubic(new PCubic(p));
+    //         List<PCubic> arr = new List<PCubic>();
+    //         arr.Add(s);
+    //         return arr;
+    //     }
 
-        List<PCubic> reduced = reduce(c);
-        List<PCubic> result = new List<PCubic>();
+    //     List<PCubic> reduced = reduce(c);
+    //     List<PCubic> result = new List<PCubic>();
+    //     foreach (PCubic segment in reduced) {
+    //         PCubic s = scale(segment, d, null);
+    //         if (s != null)
+    //             result.Add(s);
+    //     }
+    //     return result;
+    // }
+
+    public static List<Segment> offset(Segment c, double d, LinearDistanceFunction distanceFn) {
+        List<Segment> reduced = reduce(c);
+        List<Segment> result = new List<Segment>();
         foreach (PCubic segment in reduced) {
-            PCubic s = scale(segment, d, null);
+            Segment s = scale(segment, d, null);
             if (s != null)
                 result.Add(s);
         }
         return result;
     }
 
-    public static List<PCubic> offset(PCubic c, double d, LinearDistanceFunction distanceFn) {
-        List<PCubic> reduced = reduce(c);
-        List<PCubic> result = new List<PCubic>();
-        foreach (PCubic segment in reduced) {
-            PCubic s = scale(segment, d, null);
-            if (s != null)
-                result.Add(s);
+    public static OffsetResult offset(Segment s, double t, double d) {
+        return new OffsetResult(compute(t, s.getPointsList()), normal(s, t), d);
+    }
+
+    public static Segment scale(Segment s, double d, LinearDistanceFunction distanceFn) {
+        int order = s.getPoints().Length - 1;
+        if (distanceFn != null && order == 2) {
+            return scale(raise(s), d, distanceFn);
         }
-        return result;
-    }
-
-    public static OffsetResult offset(PCubic c, double t, double d) {
-        return new OffsetResult(compute(t, c.getPointsList()), normal(c, t), d);
-    }
-
-    public static PCubic scale(PCubic c, double d, LinearDistanceFunction distanceFn) {
         // TODO: add special handling for degenerate (=linear) curves
-        bool clockwise = Clockwise(c);
+        bool clockwise = Clockwise(s);
         double r1 = distanceFn != null ? DistanceFn(0.0, distanceFn) : d;
         double r2 = distanceFn != null ? DistanceFn(1.0, distanceFn) : d;
 
-        OffsetResult[] v = new OffsetResult[] { offset(c, 0.0, 10.0), offset(c, 1.0, 10.0) };
+        OffsetResult[] v = new OffsetResult[] { offset(s, 0.0, 10.0), offset(s, 1.0, 10.0) };
         Vector2d o = lli4(v[0].xy, v[0].c, v[1].xy, v[1].c);
 
         if (Double.IsNaN(o.x)) {
@@ -1385,36 +1363,40 @@ public class PathUtils {
         //		System.out.println("o: "+o.toString());
 
         // move all points by distance 'd' wrt the origin 'o'
-        Vector2d[] points = c.points;
-        Vector2d[] np = new Vector2d[4];
+        Vector2d[] points = s.getPoints();
+        Vector2d[] np = new Vector2d[points.Length];
 
         // move end points by fixed distance along normal.
         for (int t = 0; t < 2; t++) {
-            np[t * 3] = points[t * 3].cpy();
-            np[t * 3].x += (t == 1 ? r2 : r1) * v[t].n.x;
-            np[t * 3].y += (t == 1 ? r2 : r1) * v[t].n.y;
+            np[t * order] = points[t * order].cpy();
+            np[t * order].x += (t == 1 ? r2 : r1) * v[t].n.x;
+            np[t * order].y += (t == 1 ? r2 : r1) * v[t].n.y;
             //			System.out.println("np["+(t*3)+"]: "+np[t*3].toString());
         }
-
+        
         if (distanceFn == null) {
             // move control points to lie on the intersection of the offset
             // derivative vector, and the origin-through-control vector
             for (int t = 0; t < 2; t++) {
-
-                Vector2d p = np[t * 3];
-                Vector2d dd = derivative(c, t);
+                if (order == 2 && t > 0) 
+                    break;
+                Vector2d p = np[t * order];
+                Vector2d dd = derivative(s, t);
                 Vector2d p2 = new Vector2d(p.x + dd.x, p.y + dd.y);
                 np[t + 1] = lli4(p, p2, o, points[t + 1].cpy());
                 //	            System.out.println("np["+(t+1)+"]: "+np[t+1].toString());
             }
-            return new PCubic(new PCubic(np));
+            // Debug.Log("off: " + np[3].x +", "+ np[3].y);
+            return order == 3 ? (Segment)new PCubic(np) : (Segment)new PQuadratic(np);
         }
         // move control points by "however much necessary to
         // ensure the correct tangent to endpoint".
         for (int t = 0; t < 2; t++) {
+            if (order == 2 && t > 0) 
+                    break;
             Vector2d p = points[t + 1].cpy();
             Vector2d ov = new Vector2d(p.x - o.x, p.y - o.y);
-            double rc = distanceFn != null ? DistanceFn((t + 1.0) / 3.0, distanceFn) : d;
+            double rc = distanceFn != null ? DistanceFn((t + 1.0) / order, distanceFn) : d;
             if (distanceFn != null && !clockwise)
                 rc = -rc;
             double m = Mathd.Sqrt(ov.x * ov.x + ov.y * ov.y);
@@ -1422,28 +1404,29 @@ public class PathUtils {
             np[t + 1] = new Vector2d(p.x + rc * ov.x, p.y + rc * ov.y);
         }
 
-        return new PCubic(new PCubic(np));
+        return order == 3 ? (Segment)new PCubic(np) : (Segment)new PQuadratic(np);
     }
 
-    public static bool Clockwise(PCubic c) {
-        Vector2d[] points = c.points;
-        double angle = Angle(points[0], points[3], points[1]);
+    public static bool Clockwise(Segment s) {
+        Vector2d[] points = s.getPoints();
+        double angle = Angle(points[0], points[s.getPoints().Length - 1], points[1]);
         return angle > 0.0;
     }
 
-    public static List<PCubic> outline(PCubic c, params double[] d) {
+    public static List<Segment> outline(Segment c, params double[] d) {
         double d2 = d.Length > 1 ? d[1] : d[0];
-        List<PCubic> reduced = reduce(c);
+        List<Segment> reduced = reduce(c);
+        
         int len = reduced.Count;
-        List<PCubic> fcurves = new List<PCubic>();
-        List<PCubic> bcurves = new List<PCubic>();
+        List<Segment> fcurves = new List<Segment>();
+        List<Segment> bcurves = new List<Segment>();
         double alen = 0.0;
         double tlen = length(c, 10);
 
         bool graduated = d.Length == 4;
 
         // form curve oulines
-        foreach (PCubic segment in reduced) {
+        foreach (Segment segment in reduced) {
             double slen = length(segment, 10);
             if (graduated) {
                 fcurves.Add(
@@ -1458,72 +1441,72 @@ public class PathUtils {
         }
 
         // reverse the "return" outline
-        foreach (PCubic segment in bcurves)
+        foreach (Segment segment in bcurves)
             segment.reverse();
         bcurves.Reverse();
 
         // form the endcaps as lines
-        List<PCubic> segments = new List<PCubic>();
-        Vector2d fs = fcurves[0].points[0];
-        Vector2d fe = fcurves[len - 1].points[fcurves[len - 1].points.Length - 1];
-        Vector2d bs = bcurves[len - 1].points[bcurves[len - 1].points.Length - 1];
-        Vector2d be = bcurves[0].points[0];
+        List<Segment> segments = new List<Segment>();
+        Vector2d fs = fcurves[0].getPoints()[0];
+        Vector2d fe = fcurves[len - 1].getPoints()[fcurves[len - 1].getPoints().Length - 1];
+        Vector2d bs = bcurves[len - 1].getPoints()[bcurves[len - 1].getPoints().Length - 1];
+        Vector2d be = bcurves[0].getPoints()[0];
         PCubic le = makeline(fe, be);
         PCubic ls = makeline(bs, fs);
         segments.AddRange(fcurves);
-        segments.Add(le);
+        segments.Add(new PLine(be));
         segments.AddRange(bcurves);
-        segments.Add(ls);
+        segments.Add(new PLine(fs));
         return segments;
     }
 
-    public static List<PCubic> outline2(PCubic c, params double[] d) {
-        double d2 = d.Length > 1 ? d[1] : d[0];
-        List<PCubic> reduced = reduce(c);
-        int len = reduced.Count;
-        List<PCubic> fcurves = new List<PCubic>();
-        List<PCubic> bcurves = new List<PCubic>();
-        double alen = 0.0;
-        double tlen = length(c, 10);
+    // public static List<PCubic> outline2(PCubic c, params double[] d) {
+    //     double d2 = d.Length > 1 ? d[1] : d[0];
+    //     List<PCubic> reduced = reduce(c);
+    //     int len = reduced.Count;
+    //     List<PCubic> fcurves = new List<PCubic>();
+    //     List<PCubic> bcurves = new List<PCubic>();
+    //     double alen = 0.0;
+    //     double tlen = length(c, 10);
 
-        bool graduated = d.Length == 4;
+    //     bool graduated = d.Length == 4;
 
-        // form curve oulines
-        foreach (PCubic segment in reduced) {
-            double slen = length(segment, 10);
-            if (graduated) {
-                fcurves.Add(
-                        scale(segment, 0.0, new LinearDistanceFunction(d[0], d[2], tlen, alen, slen)));
-                bcurves.Add(
-                        scale(segment, 0.0, new LinearDistanceFunction(-d2, -d[4], tlen, alen, slen)));
-            } else {
-                fcurves.Add(scale(segment, d[0], null));
-                bcurves.Add(scale(segment, -d2, null));
-            }
-            alen += slen;
-        }
+    //     // form curve oulines
+    //     foreach (PCubic segment in reduced) {
+    //         double slen = length(segment, 10);
+    //         if (graduated) {
+    //             fcurves.Add(
+    //                     scale(segment, 0.0, new LinearDistanceFunction(d[0], d[2], tlen, alen, slen)));
+    //             bcurves.Add(
+    //                     scale(segment, 0.0, new LinearDistanceFunction(-d2, -d[4], tlen, alen, slen)));
+    //         } else {
+    //             fcurves.Add(scale(segment, d[0], null));
+    //             bcurves.Add(scale(segment, -d2, null));
+    //         }
+    //         alen += slen;
+    //     }
 
-        // reverse the "return" outline
-        foreach (PCubic segment in bcurves)
-            segment.reverse();
-        bcurves.Reverse();
+    //     // reverse the "return" outline
+    //     foreach (PCubic segment in bcurves)
+    //         segment.reverse();
+    //     bcurves.Reverse();
 
-        List<PCubic> segments = new List<PCubic>();
-        if (fcurves.Count != 0 || bcurves.Count != 0) {
-            // form the endcaps as lines
-            Vector2d fs = fcurves[0].points[0];
-            Vector2d fe = fcurves[len - 1].points[fcurves[len - 1].points.Length - 1];
-            Vector2d bs = bcurves[len - 1].points[bcurves[len - 1].points.Length - 1];
-            Vector2d be = bcurves[0].points[0];
-            PCubic le = makeline(fe, be);
-            PCubic ls = makeline(bs, fs);
-            segments.Add(ls);
-            segments.Add(le);
-        }
-        segments.AddRange(fcurves);
-        segments.AddRange(bcurves);
-        return segments;
-    }
+    //     List<PCubic> segments = new List<PCubic>();
+    //     if (fcurves.Count != 0 || bcurves.Count != 0) {
+    //         // form the endcaps as lines
+    //         Vector2d fs = fcurves[0].points[0];
+    //         Vector2d fe = fcurves[len - 1].points[fcurves[len - 1].points.Length - 1];
+    //         Vector2d bs = bcurves[len - 1].points[bcurves[len - 1].points.Length - 1];
+    //         Vector2d be = bcurves[0].points[0];
+    //         PCubic le = makeline(fe, be);
+    //         PCubic ls = makeline(bs, fs);
+    //         segments.Add(ls);
+    //         segments.Add(le);
+    //     }
+    //     segments.AddRange(fcurves);
+    //     segments.AddRange(bcurves);
+    //     return segments;
+    // }
 
     public static DoubleArray inflections(PCubic cb) {
         // FIXME: TODO: add in inflection abstraction for quartic+ curves?

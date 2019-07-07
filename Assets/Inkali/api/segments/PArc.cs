@@ -230,4 +230,8 @@ public class PArc : Segment {
     {
         return new Vector2d[]{this.startPoint, this.endPoint};
     }
+
+    public override void reverse()
+    {
+    }
 }

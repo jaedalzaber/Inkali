@@ -38,14 +38,21 @@ public class SystemStroke : EntitySystem, EntityListener {
     int[] idx = new int[6];
 
     private void ProcessShape(Shape shape) {
-        CompStroke comp = shape.getComponent<CompStroke>(typeof(CompStroke));
+        CompFill comp = shape.getComponent<CompFill>(typeof(CompFill));
         List<Vector3> vertices = new List<Vector3>();
         List<Vector4> uv = new List<Vector4>();
         List<Vector2> uv2 = new List<Vector2>();
         List<int> indices = new List<int>();
         vertices.Clear();
         uv.Clear();
+        uv2.Clear();
         indices.Clear();
+
+        
+        
+
+        BBoxResult res = shape.segments.Count>0 ? PathUtils.bbox(shape.segments[0]) : null;
+
 
         foreach (Segment seg in shape.segments) {
             if(seg.GetType() == typeof(PCubic)) {
@@ -55,51 +62,101 @@ public class SystemStroke : EntitySystem, EntityListener {
             } else if (seg.GetType() == typeof(PArc)) {
                 PathUtils.ComputeArc((PArc)seg, vertices, uv, indices);
             }
+            BBoxResult r = PathUtils.bbox(seg);
+                if(r.x.max > res.x.max) res.x.max = r.x.max;
+                if(r.y.max > res.y.max) res.y.max = r.y.max;
+                if(r.x.min < res.x.min) res.x.min = r.x.min;
+                if(r.y.min < res.y.min) res.y.min = r.y.min;
         }
 
-        FillStroke(shape, vertices, uv, indices);
+        FillShape(shape, vertices, uv, uv2, indices);
 
-        vertices.Add(v1);
-        vertices.Add(v2);
-        vertices.Add(v3);
-        vertices.Add(v4);
-        uv.Add(new Vector4(1, 1, 1, 0));
-        uv.Add(new Vector4(1, 1, 1, 0));
-        uv.Add(new Vector4(1, 1, 1, 0));
-        uv.Add(new Vector4(1, 1, 1, 0));
-        idx[0] = indices.Count;
-        idx[1] = indices.Count + 1;
-        idx[2] = indices.Count + 2;
-        idx[3] = indices.Count;
-        idx[4] = indices.Count + 2;
-        idx[5] = indices.Count + 3;
+        if(res != null){
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, 1.1f));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, 1.1f));
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.max, 1.1f));
 
-        shape.meshStroke.Clear();
-        shape.meshStroke.subMeshCount = 2;
-        shape.meshStroke.SetVertices(vertices);
-        shape.meshStroke.SetUVs(0, uv);
-        shape.meshStroke.SetTriangles(indices.ToArray(), 0);
+            uv.Add(new Vector4(1, 1, 1, 5));
+            uv.Add(new Vector4(1, 1, 1, 5));
+            uv.Add(new Vector4(1, 1, 1, 5));
+
+            uv2.Add(new Vector2(1, 1));
+            uv2.Add(new Vector2(1, 1));
+            uv2.Add(new Vector2(1, 1));
+
+            indices.Add(indices.Count);
+            indices.Add(indices.Count);
+            indices.Add(indices.Count);       
+
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, 1.1f));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.min, 1.1f));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, 1.1f));
+
+            uv.Add(new Vector4(1, 1, 1, 5));
+            uv.Add(new Vector4(1, 1, 1, 5));
+            uv.Add(new Vector4(1, 1, 1, 5));
+
+            uv2.Add(new Vector2(1, 1));
+            uv2.Add(new Vector2(1, 1));
+            uv2.Add(new Vector2(1, 1));
+
+            indices.Add(indices.Count);
+            indices.Add(indices.Count);
+            indices.Add(indices.Count);    
+        }
+
+        shape.meshFill.Clear();
+        shape.meshFill.subMeshCount = 2;
+        Debug.Log("verts: " + vertices.Count);
+        Debug.Log("uv: " + uv.Count);
+        Debug.Log("uv2: " + uv2.Count);
+        shape.meshFill.SetVertices(vertices);
+        shape.meshFill.SetUVs(0, uv);
+        shape.meshFill.SetUVs(1, uv2);
+        shape.meshFill.SetTriangles(indices.ToArray(), 0);
         //indices.Clear();
-        shape.meshStroke.SetTriangles(indices.ToArray(), 1);
+        shape.meshFill.SetTriangles(indices.ToArray(), 1);
 
-        shape.UpdateStroke = false;
+        shape.UpdateFill = false;
     }
 
-    private void FillStroke(Shape shape, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
+    private void FillShape(Shape shape, List<Vector3> vertices, List<Vector4> uv, List<Vector2> uv2, List<int> indices) {
         if (shape.segments.Count > 1) {
             for(int i=0; i< shape.segments.Count-1; i++) {
                 if(shape.segments[i].GetType() == typeof(PArc)) {
-                    AddLineVert(shape.segments[i].StartPoint.f3(), vertices, uv, indices);
-                    AddLineVert(new Vector3((float)((PArc)shape.segments[i]).CenterX, (float)((PArc)shape.segments[i]).CenterY, 1), vertices, uv, indices);
-                    AddLineVert(shape.segments[i].EndPoint.f3(), vertices, uv, indices);
+                    // AddLineVert(shape.segments[i].StartPoint.f3(), vertices, uv, indices);
+                    // AddLineVert(new Vector3((float)((PArc)shape.segments[i]).CenterX, (float)((PArc)shape.segments[i]).CenterY, 1), vertices, uv, indices);
+                    // AddLineVert(shape.segments[i].EndPoint.f3(), vertices, uv, indices);
                 } else {
                     vertices.Add(shape.segments[0].StartPoint.f3());
                     vertices.Add(shape.segments[i].EndPoint.f3());
                     vertices.Add(shape.segments[i + 1].EndPoint.f3());
 
-                    uv.Add(new Vector4(1, 1, 1, 0));
-                    uv.Add(new Vector4(1, 1, 1, 0));
-                    uv.Add(new Vector4(1, 1, 1, 0));
+                    if(i == shape.segments.Count-2 && shape.segments.Count > 1){
+                        uv.Add(new Vector4(1, 1, 1, 6));
+                        uv.Add(new Vector4(1, 1, 1, 6));
+                        uv.Add(new Vector4(1, 1, 1, 6));
+
+                        uv2.Add(new Vector2(1, 0));
+                        uv2.Add(new Vector2(1, 1));
+                        uv2.Add(new Vector2(1, 0));
+                    }else if(shape.segments[i+1].GetType() == typeof(PLine)){
+                        uv.Add(new Vector4(1, 1, 1, 6));
+                        uv.Add(new Vector4(1, 1, 1, 6));
+                        uv.Add(new Vector4(1, 1, 1, 6));
+
+                        uv2.Add(new Vector2(1, 1));
+                        uv2.Add(new Vector2(1, 0));
+                        uv2.Add(new Vector2(1, 0));
+                    }else {
+                        uv.Add(new Vector4(1, 1, 1, 0));
+                        uv.Add(new Vector4(1, 1, 1, 0));
+                        uv.Add(new Vector4(1, 1, 1, 0));
+
+                        uv2.Add(new Vector2(1, 1));
+                        uv2.Add(new Vector2(1, 1));
+                        uv2.Add(new Vector2(1, 1));
+                    }
 
                     indices.Add(indices.Count);
                     indices.Add(indices.Count);

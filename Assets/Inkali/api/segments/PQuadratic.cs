@@ -55,6 +55,24 @@ public class PQuadratic : Segment {
         points[2] = endPoint;
     }
 
+    public PQuadratic(List<Vector2d> np) {
+            this.startPoint = np[0];
+        this.ctrl1 = np[1];
+        this.endPoint = np[2];
+        points[0] = startPoint;
+        points[1] = ctrl1;
+        points[2] = endPoint;
+    }
+
+    public PQuadratic(Vector2d[] np) {
+            this.startPoint = np[0];
+        this.ctrl1 = np[1];
+        this.endPoint = np[2];
+        points[0] = startPoint;
+        points[1] = ctrl1;
+        points[2] = endPoint;
+    }
+
     private Vector2d tmp = new Vector2d(), tmp2 = new Vector2d();
     public override double ApproxLength(int samples) {
         double tempLength = 0;
@@ -91,5 +109,14 @@ public class PQuadratic : Segment {
     public override Vector2d[] getPoints()
     {
         return points;
+    }
+
+    public override void reverse() {
+        Vector2d tmp = new Vector2d(startPoint);
+        startPoint = endPoint;
+        endPoint = tmp;
+        points[0] = this.startPoint;
+        points[1] = this.ctrl1;
+        points[2] = this.endPoint;
     }
 }

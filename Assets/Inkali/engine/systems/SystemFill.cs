@@ -50,7 +50,7 @@ public class SystemFill : EntitySystem, EntityListener {
         uv2.Clear();
         indices.Clear();
 
-        BBoxResult res = shape.segments.Count>0 ? PathUtils.bbox((PCubic)shape.segments[0]) : null;
+        BBoxResult res = shape.segments.Count>0 ? PathUtils.bbox(shape.segments[0]) : null;
 
         foreach (Segment seg in shape.segments) {
             if(seg.GetType() == typeof(PCubic)) {
@@ -105,9 +105,9 @@ public class SystemFill : EntitySystem, EntityListener {
 
         shape.meshFill.Clear();
         shape.meshFill.subMeshCount = 2;
-        Debug.Log("verts: " + vertices.Count);
-        Debug.Log("uv: " + uv.Count);
-        Debug.Log("uv2: " + uv2.Count);
+        // Debug.Log("verts: " + vertices.Count);
+        // Debug.Log("uv: " + uv.Count);
+        // Debug.Log("uv2: " + uv2.Count);
         shape.meshFill.SetVertices(vertices);
         shape.meshFill.SetUVs(0, uv);
         shape.meshFill.SetUVs(1, uv2);

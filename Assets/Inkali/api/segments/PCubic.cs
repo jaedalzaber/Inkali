@@ -123,9 +123,8 @@ public class PCubic : Segment {
         points[3] = c.endPoint;
     }
 
-    public PCubic(List<Vector2d> np) {
-        if (this.startPoint == null)
-            this.startPoint = np[0];
+    internal PCubic(List<Vector2d> np) {
+        this.startPoint = np[0];
         this.ctrl1 = np[1];
         this.ctrl2 = np[2];
         this.endPoint = np[3];
@@ -135,9 +134,8 @@ public class PCubic : Segment {
         points[3] = endPoint;
     }
 
-    public PCubic(Vector2d[] np) {
-        if (this.startPoint == null)
-            this.startPoint = np[0];
+    internal PCubic(Vector2d[] np) {
+        this.startPoint = np[0];
         this.ctrl1 = np[1];
         this.ctrl2 = np[2];
         this.endPoint = np[3];
@@ -183,7 +181,7 @@ public class PCubic : Segment {
         return startPoint * (dt2 * dt) + ctrl1 * (3 * dt2 * t) + ctrl2 * (3 * dt * t2) + endPoint * (t2 * t);
     }
 
-    internal void reverse() {
+    public override void reverse() {
         Vector2d tmp = new Vector2d(startPoint);
         startPoint = endPoint;
         endPoint = tmp;

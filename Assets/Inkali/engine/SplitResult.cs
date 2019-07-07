@@ -2,8 +2,8 @@
 using UnityEngine;
 
 public class SplitResult {
-    public PCubic left;
-    public PCubic right;
+    public Segment left;
+    public Segment right;
     public List<Vector2d> span;
 
 }

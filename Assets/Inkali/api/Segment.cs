@@ -30,4 +30,5 @@ public abstract class Segment {
 
     public abstract List<Vector2d> getPointsList();
     public abstract Vector2d[] getPoints();
+    public abstract void reverse();
 }
