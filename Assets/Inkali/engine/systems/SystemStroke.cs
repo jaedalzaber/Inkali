@@ -41,24 +41,18 @@ public class SystemStroke : EntitySystem, EntityListener {
         CompFill comp = shape.getComponent<CompFill>(typeof(CompFill));
         List<Vector3> vertices = new List<Vector3>();
         List<Vector4> uv = new List<Vector4>();
-        List<Vector2> uv2 = new List<Vector2>();
         List<int> indices = new List<int>();
         vertices.Clear();
         uv.Clear();
-        uv2.Clear();
         indices.Clear();
-
-        
-        
 
         BBoxResult res = shape.segments.Count>0 ? PathUtils.bbox(shape.segments[0]) : null;
 
-
         foreach (Segment seg in shape.segments) {
             if(seg.GetType() == typeof(PCubic)) {
-                PathUtils.ComputeCubic((PCubic)seg, vertices, uv, uv2, indices);
+                PathUtils.ComputeCubic((PCubic)seg, vertices, uv, indices);
             } else if (seg.GetType() == typeof(PQuadratic)) {
-                PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, uv2, indices);
+                PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, indices);
             } else if (seg.GetType() == typeof(PArc)) {
                 PathUtils.ComputeArc((PArc)seg, vertices, uv, indices);
             }
@@ -69,7 +63,7 @@ public class SystemStroke : EntitySystem, EntityListener {
                 if(r.y.min < res.y.min) res.y.min = r.y.min;
         }
 
-        FillShape(shape, vertices, uv, uv2, indices);
+        FillShape(shape, vertices, uv, indices);
 
         if(res != null){
             vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, 1.1f));
@@ -79,10 +73,6 @@ public class SystemStroke : EntitySystem, EntityListener {
             uv.Add(new Vector4(1, 1, 1, 5));
             uv.Add(new Vector4(1, 1, 1, 5));
             uv.Add(new Vector4(1, 1, 1, 5));
-
-            uv2.Add(new Vector2(1, 1));
-            uv2.Add(new Vector2(1, 1));
-            uv2.Add(new Vector2(1, 1));
 
             indices.Add(indices.Count);
             indices.Add(indices.Count);
@@ -96,10 +86,6 @@ public class SystemStroke : EntitySystem, EntityListener {
             uv.Add(new Vector4(1, 1, 1, 5));
             uv.Add(new Vector4(1, 1, 1, 5));
 
-            uv2.Add(new Vector2(1, 1));
-            uv2.Add(new Vector2(1, 1));
-            uv2.Add(new Vector2(1, 1));
-
             indices.Add(indices.Count);
             indices.Add(indices.Count);
             indices.Add(indices.Count);    
@@ -109,10 +95,8 @@ public class SystemStroke : EntitySystem, EntityListener {
         shape.meshFill.subMeshCount = 2;
         Debug.Log("verts: " + vertices.Count);
         Debug.Log("uv: " + uv.Count);
-        Debug.Log("uv2: " + uv2.Count);
         shape.meshFill.SetVertices(vertices);
         shape.meshFill.SetUVs(0, uv);
-        shape.meshFill.SetUVs(1, uv2);
         shape.meshFill.SetTriangles(indices.ToArray(), 0);
         //indices.Clear();
         shape.meshFill.SetTriangles(indices.ToArray(), 1);
@@ -120,7 +104,7 @@ public class SystemStroke : EntitySystem, EntityListener {
         shape.UpdateFill = false;
     }
 
-    private void FillShape(Shape shape, List<Vector3> vertices, List<Vector4> uv, List<Vector2> uv2, List<int> indices) {
+    private void FillShape(Shape shape, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
         if (shape.segments.Count > 1) {
             for(int i=0; i< shape.segments.Count-1; i++) {
                 if(shape.segments[i].GetType() == typeof(PArc)) {
@@ -136,26 +120,14 @@ public class SystemStroke : EntitySystem, EntityListener {
                         uv.Add(new Vector4(1, 1, 1, 6));
                         uv.Add(new Vector4(1, 1, 1, 6));
                         uv.Add(new Vector4(1, 1, 1, 6));
-
-                        uv2.Add(new Vector2(1, 0));
-                        uv2.Add(new Vector2(1, 1));
-                        uv2.Add(new Vector2(1, 0));
                     }else if(shape.segments[i+1].GetType() == typeof(PLine)){
                         uv.Add(new Vector4(1, 1, 1, 6));
                         uv.Add(new Vector4(1, 1, 1, 6));
                         uv.Add(new Vector4(1, 1, 1, 6));
-
-                        uv2.Add(new Vector2(1, 1));
-                        uv2.Add(new Vector2(1, 0));
-                        uv2.Add(new Vector2(1, 0));
                     }else {
                         uv.Add(new Vector4(1, 1, 1, 0));
                         uv.Add(new Vector4(1, 1, 1, 0));
                         uv.Add(new Vector4(1, 1, 1, 0));
-
-                        uv2.Add(new Vector2(1, 1));
-                        uv2.Add(new Vector2(1, 1));
-                        uv2.Add(new Vector2(1, 1));
                     }
 
                     indices.Add(indices.Count);

@@ -35,13 +35,13 @@
 			{
 				float4 vertex : POSITION;
 				float4 uv : TEXCOORD0;
-				float4 uv2 : TEXCOORD1;
+				// float4 uv2 : TEXCOORD1;
 			};
 
 			struct v2f
 			{
 				float4 uv : TEXCOORD0;
-				float4 uv2 : TEXCOORD1;
+				// float4 uv2 : TEXCOORD1;
 				float4 vertex : SV_POSITION;
 			};
 
@@ -55,7 +55,7 @@
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = v.uv;
-				o.uv2 = v.uv2;
+				// o.uv2 = v.uv2;
 				return o;
 			}
 			
@@ -65,10 +65,10 @@
 				if (i.uv.w == 0)
 					discard;
 				if (i.uv.w == 6){
-					float dist = distance(i.uv2.xy, fixed2(1, 1));
+					float dist = distance(i.uv.xy, fixed2(1, 1));
 					float delta = fwidth(dist);
-					float alpha = smoothstep(0, delta, i.uv2.y);
-					if(i.uv2.y < delta){
+					float alpha = smoothstep(0, delta, i.uv.y);
+					if(i.uv.y < delta){
 						return fixed4(_inColor.xyz, alpha  * _inColor.w);
 					} else discard;
 				}
@@ -233,13 +233,13 @@
 			{
 				float4 vertex : POSITION;
 				float4 uv : TEXCOORD0;
-				float4 uv2 : TEXCOORD1;
+				// float4 uv2 : TEXCOORD1;
 			};
 
 			struct v2f
 			{
 				float4 uv : TEXCOORD0;
-				float4 uv2 : TEXCOORD1;
+				// float4 uv2 : TEXCOORD1;
 				float4 vertex : SV_POSITION;
 			};
 
@@ -255,7 +255,7 @@
 				float4 vert = UnityObjectToClipPos(u);
 				o.vertex = vert;
 				o.uv = v.uv;
-				o.uv2 = v.uv2;
+				// o.uv2 = v.uv2;
 				return o;
 			}
 			
@@ -264,10 +264,10 @@
 				if (i.uv.w == 5 || i.uv.w == 0)
 					discard;
 				if (i.uv.w == 6){
-					float dist = distance(i.uv2.xy, fixed2(1, 1));
+					float dist = distance(i.uv.xy, fixed2(1, 1));
 					float delta = fwidth(dist);
-					float alpha = 1 - smoothstep(0, delta, i.uv2.y);
-					if(i.uv2.y < delta){
+					float alpha = 1 - smoothstep(0, delta, i.uv.y);
+					if(i.uv.y < delta){
 						return fixed4(_inColor.xyz, alpha  * _inColor.w);
 					} else discard;
 				}
