@@ -303,9 +303,9 @@ public class PathUtils {
             vertices.Add(new Vector3(x0, y0, 1));
             vertices.Add(new Vector3(x0123, y0123, 1));
             vertices.Add(new Vector3(x3, y3, 1));
-            uv.Add(new Vector4(1, 1, 1, 0));
-            uv.Add(new Vector4(1, 1, 1, 0));
-            uv.Add(new Vector4(1, 1, 1, 0));
+            uv.Add(new Vector4(1, 1, 1, 6));
+            uv.Add(new Vector4(1, 1, 1, 6));
+            uv.Add(new Vector4(1, 1, 1, 6));
             indices.Add(indices.Count);
             indices.Add(indices.Count);
             indices.Add(indices.Count);
@@ -1411,9 +1411,14 @@ public class PathUtils {
         return angle > 0.0;
     }
 
+    private void LineToQuad(PLine line, List<Vector3> vertices, List<Vector4> uv,List<int> indices, double d){
+        
+    }
+
     public static List<Segment> outline(Segment c, params double[] d) {
         double d2 = d.Length > 1 ? d[1] : d[0];
         List<Segment> reduced = reduce(c);
+        List<Segment> segments = new List<Segment>();
         
         int len = reduced.Count;
         List<Segment> fcurves = new List<Segment>();
@@ -1421,19 +1426,26 @@ public class PathUtils {
         double alen = 0.0;
         double tlen = length(c, 10);
 
-        bool graduated = d.Length == 4;
+        //TODO: Fix graduated stroke
+        bool graduated = /*d.Length == 4 */ false;
 
         // form curve oulines
         foreach (Segment segment in reduced) {
             double slen = length(segment, 10);
+            
             if (graduated) {
                 fcurves.Add(
                         scale(segment, 0.0, new LinearDistanceFunction(d[0], d[2], tlen, alen, slen)));
                 bcurves.Add(
                         scale(segment, 0.0, new LinearDistanceFunction(-d2, -d[4], tlen, alen, slen)));
             } else {
-                fcurves.Add(scale(segment, d[0], null));
-                bcurves.Add(scale(segment, -d2, null));
+                Segment f = scale(segment, d[0], null);
+                Segment b = scale(segment, -d2, null);
+
+                PQuad quad = new PQuad(f.StartPoint, f.EndPoint, b.EndPoint, b.StartPoint);
+                segments.Add(quad);
+                fcurves.Add(f);
+                bcurves.Add(b);
             }
             alen += slen;
         }
@@ -1444,7 +1456,6 @@ public class PathUtils {
         bcurves.Reverse();
 
         // form the endcaps as lines
-        List<Segment> segments = new List<Segment>();
         Vector2d fs = fcurves[0].getPoints()[0];
         Vector2d fe = fcurves[len - 1].getPoints()[fcurves[len - 1].getPoints().Length - 1];
         Vector2d bs = bcurves[len - 1].getPoints()[bcurves[len - 1].getPoints().Length - 1];

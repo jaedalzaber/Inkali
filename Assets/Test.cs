@@ -10,6 +10,9 @@ public class Test : MonoBehaviour {
     private Path p1;
     private PaintSolid paint;
 
+    public GameObject[] points;
+    private PCubic c1;
+
     public class PositionComponent : Component
     {
         public float x = 0.0f;
@@ -74,7 +77,7 @@ public class Test : MonoBehaviour {
 
 
         p1 = engine.CreatePath("p1");
-        // p1.Add(new PCubic(new Vector2d(0,1), new Vector2d(0,2), new Vector2d(2,2), new Vector2d(2,0)));
+        p1.Add(new PCubic(new Vector2d(-2,-2), new Vector2d(0,4), new Vector2d(2,4), new Vector2d(4,-2)));
         // p1.Add(new PCubic(new Vector2d(5, -2), new Vector2d(2, -3), new Vector2d(0, -2)));
         // p1.Add(new PCubic(new Vector2d(-1, 2), new Vector2d(3, 3), new Vector2d(4, 1)));
         // // p1.Add(new PLine(new Vector2d(2.5f, -1f)));
@@ -83,17 +86,12 @@ public class Test : MonoBehaviour {
         // p1.Add(new PCubic(new Vector2d(0, 0), new Vector2d(0, -3), new Vector2d(-1, 1.5f)));
 
         paint = new PaintSolid(Color.cyan);
+        PaintSolid paint2 = new PaintSolid(Color.blue);
         p1.FillPaint = paint;
-
-        List<Segment> s = PathUtils.outline(new PQuadratic(new Vector2d(0,0), new Vector2d(0,2), new Vector2d(2,0)), .05f);
-        foreach (Segment ss in s)
-        {
-            p1.Add(ss);
-        }
-        // Path p2 = engine.CreatePath("p2");
-        // p2.Add(new PArc(new Vector2d(0, 0), new Vector2d(1, 1), 2, 2, 0, true, PArc.SweepDirection.ANTI_CLOCKWISE));
-        // p2.Add(new PArc(new Vector2d(0, 0), new Vector2d(-.5, 2), 2, 2, 0, true, PArc.SweepDirection.CLOCKWISE));
-        // p2.FillPaint = new PaintSolid(Color.green);
+        p1.StrokePaint = paint2;
+        p1.StrokeWidth = .35f;
+        c1 = new PCubic(new Vector2d(2,0), new Vector2d(-2,3), new Vector2d(4,3), new Vector2d(0,0));
+        p1.Add(c1);
 
         engine.addEntity(p1);
         // engine.addEntity(p2);
@@ -105,6 +103,25 @@ public class Test : MonoBehaviour {
         if (Input.anyKeyDown) {
             Color c = Color.yellow;
             // paint.Color = c;
+        }
+        if(((Touch)points[0].GetComponent(typeof(Touch))).Touched()){
+            c1.StartPoint=new Vector2d(points[0].transform.position.x, points[0].transform.position.y);
+            p1.UpdateStroke = true;
+        }
+
+        if(((Touch)points[1].GetComponent(typeof(Touch))).Touched()){
+            c1.Ctrl1=new Vector2d(points[1].transform.position.x, points[1].transform.position.y);
+            p1.UpdateStroke = true;
+        }
+
+        if(((Touch)points[2].GetComponent(typeof(Touch))).Touched()){
+            c1.Ctrl2=new Vector2d(points[2].transform.position.x, points[2].transform.position.y);
+            p1.UpdateStroke = true;
+        }
+
+        if(((Touch)points[3].GetComponent(typeof(Touch))).Touched()){
+            c1.EndPoint=new Vector2d(points[3].transform.position.x, points[3].transform.position.y);
+            p1.UpdateStroke = true;
         }
     }
 }

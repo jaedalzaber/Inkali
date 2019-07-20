@@ -10,6 +10,7 @@ public abstract class Shape : Entity {
     public GameObject objStroke;
 
     protected MeshRenderer fillRenderer;
+    protected MeshRenderer strokeRenderer;
     private static int queue = 3002;
 
     protected float strokeWidth = 0;
@@ -24,6 +25,7 @@ public abstract class Shape : Entity {
     protected Paint fill;
     private bool updateFillPaint;
     protected Paint stroke = new PaintSolid(Color.magenta);
+    private bool updateStrokePaint;
 
     public List<Segment> segments;
     public Vector2d startPoint;
@@ -33,7 +35,10 @@ public abstract class Shape : Entity {
         segments = new List<Segment>();
         CompFill comp = new CompFill();
         fill = comp.fill;
+        CompStroke compStroke = new CompStroke();
+        stroke = compStroke.stroke;
         add(comp);
+        add(compStroke);
     }
 
     void Start() {
@@ -43,21 +48,26 @@ public abstract class Shape : Entity {
         objStroke = new GameObject(obj.name + "_stroke");
         objStroke.transform.parent = obj.transform;
 
-        UpdateStroke = false;
+        UpdateFill= false;
 
         // Create Fill
-        MeshFilter mff = objFill.AddComponent(typeof(MeshFilter)) as MeshFilter;
+        MeshFilter meshFilterFill = objFill.AddComponent(typeof(MeshFilter)) as MeshFilter;
         fillRenderer = objFill.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
-        meshFill = mff.mesh;
+        meshFill = meshFilterFill.mesh;
         meshFill.subMeshCount = 2;
 
-        fillRenderer.materials = new Material[] { new Material(Shader.Find("Unlit/stencil")), fill.CreateMaterial() };
+        fillRenderer.materials = new Material[] { new Material(Shader.Find("Inkali/Stencil EvenOdd")), fill.CreateMaterialEO() };
         fillRenderer.materials[0].renderQueue = queue++;
-        fillRenderer.materials[1].renderQueue = queue;
+        fillRenderer.materials[1].renderQueue = queue++;
+
         // Create Stroke
-        MeshFilter mfs = objStroke.AddComponent(typeof(MeshFilter)) as MeshFilter;
-        MeshRenderer mrs = objStroke.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
-        meshStroke = mfs.mesh;
+        MeshFilter meshFilterStroke = objStroke.AddComponent(typeof(MeshFilter)) as MeshFilter;
+        strokeRenderer = objStroke.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
+        meshStroke = meshFilterStroke.mesh;
+
+        strokeRenderer.materials = new Material[] { new Material(Shader.Find("Inkali/Stencil NonZero")), fill.CreateMaterialNZ() };
+        strokeRenderer.materials[0].renderQueue = queue++;
+        strokeRenderer.materials[1].renderQueue = queue++;
 
     }
 
@@ -69,6 +79,7 @@ public abstract class Shape : Entity {
         segments.Add(segment);
         endPoint = segment.EndPoint;
         UpdateFill = true;
+        UpdateStroke = true;
     }
 
     protected void AddAll(params Segment[] segments) {
@@ -138,21 +149,21 @@ public abstract class Shape : Entity {
                 if (c == null) {
                     c = new CompStroke();
                     add(new CompStroke());
-
-                    c.strokeWidth = v;
-                    c.linecap = linecap;
-                    c.linejoin = linejoin;
-                    c.milterLimit = milterLimit;
-                    c.strokeOpacity = strokeOpacity;
-                    c.stroke = stroke;
-                    if (strokeDashArray != null) {
-                        if (d == null) { 
-                            d = new CompDash();
-                            add(d);
-                        }
-                    d.strokeDashArray = strokeDashArray;
-                    }
                 }
+                c.strokeWidth = v;
+                c.linecap = linecap;
+                c.linejoin = linejoin;
+                c.milterLimit = milterLimit;
+                c.strokeOpacity = strokeOpacity;
+                c.stroke = stroke;
+                if (strokeDashArray != null) {
+                    if (d == null) { 
+                        d = new CompDash();
+                        add(d);
+                    }
+                d.strokeDashArray = strokeDashArray;
+                }   
+                
                 UpdateStroke = true;
             }
             strokeWidth = v;
@@ -247,21 +258,29 @@ public abstract class Shape : Entity {
     public Paint StrokePaint {
         get { return stroke; }
         set {
-            objStroke.GetComponent<MeshRenderer>().material = value.CreateMaterial();
+            // objStroke.GetComponent<MeshRenderer>().material = value.CreateMaterial();
             CompStroke s = getComponent<CompStroke>(typeof(CompStroke));
             if(s != null)
                 s.stroke = value;
             stroke = value;
+            updateStrokePaint = true;
         }
     }
 
     void Update() {
         if (updateFillPaint) {
-            fill.CreateMaterial();
-            fillRenderer.materials[1] = fill.CreateMaterial();
+            fill.CreateMaterialEO();
+            fillRenderer.materials[1] = fill.CreateMaterialEO();
         }
         if (fill.update) {
             fill.Update(fillRenderer.materials[1]);
+        }
+        if (updateStrokePaint) {
+            stroke.CreateMaterialEO();
+            strokeRenderer.materials[1] = stroke.CreateMaterialEO();
+        }
+        if (stroke.update) {
+            stroke.Update(strokeRenderer.materials[1]);
         }
     }
 }

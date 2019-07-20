@@ -22,8 +22,12 @@ public class PaintSolid : Paint {
         update = false;
     }
 
-    public override Material CreateMaterial() {
-        return new Material(Shader.Find("Unlit/cubic_shader"));
+    public override Material CreateMaterialEO() {
+        return new Material(Shader.Find("Inkali/Fill EvenOdd"));
+    }
+
+    public override Material CreateMaterialNZ() {
+        return new Material(Shader.Find("Inkali/Fill NonZero"));
     }
 
     public override void setOpacity(float a) {

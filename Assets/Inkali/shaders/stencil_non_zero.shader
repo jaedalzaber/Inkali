@@ -1,4 +1,4 @@
-﻿Shader "Unlit/stencil"
+Shader "Inkali/Stencil NonZero"
 {
 	Properties
 	{
@@ -11,14 +11,19 @@
 			Tags { "RenderType" = "Opaque" "Queue" = "Transparent" }
 			Cull off
 			ZWrite off
+			// ZTest Less  
 			ColorMask 0
 			Stencil {
-				Ref 0
-				Comp Always
-				Pass Invert
-				Fail Keep
-				ZFail Keep
-				WriteMask 1
+				Ref 1
+				CompFront Always
+				PassFront IncrWrap
+				FailFront IncrWrap
+				ZFailFront IncrWrap
+
+                CompBack Always
+				PassBack DecrWrap
+				FailBack DecrWrap
+				ZFailBack DecrWrap
 			}
 
 		Pass

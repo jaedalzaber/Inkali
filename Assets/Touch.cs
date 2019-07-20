@@ -6,8 +6,8 @@
     [SerializeField] Transform target;
     float speed = 6f;
     Vector2 targetPos;
-    private bool touched = false;
-    private bool moused = false;
+    public bool touched = false;
+    public bool moused = false;
  
 	private void Start()
 	{
@@ -25,7 +25,7 @@
             }
             if (touched) {
                 targetPos = (Vector2)Camera.main.ScreenToWorldPoint(Input.touches[0].position);
-                target.position = targetPos;
+                target.position = new Vector3(targetPos.x, targetPos.y, 2);
             }
             if (Input.touches[0].phase == TouchPhase.Ended)
                 touched = false;
@@ -40,9 +40,13 @@
         }
         if (moused) {
             targetPos = (Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            target.position = targetPos;
+            target.position = new Vector3(targetPos.x, targetPos.y, 2);
         }
         if (Input.GetMouseButtonUp(0))
             moused = false;
+    }
+
+    public bool Touched(){
+        return moused || touched;
     }
  }

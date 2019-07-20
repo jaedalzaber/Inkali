@@ -8,9 +8,17 @@ public class PLine : Segment {
 
     public PLine(Vector2d endPoint) {
         this.endPoint = endPoint;
-        points[0] = startPoint;
-        points[1] = endPoint;
+        points[0] = this.startPoint;
+        points[1] = this.endPoint;
     }
+
+    public PLine(Vector2d startPoint, Vector2d endPoint) {   
+        this.startPoint = startPoint;
+        this.endPoint = endPoint;
+        points[0] = this.startPoint;
+        points[1] = this.endPoint;
+    }
+
     public override double ApproxLength(int samples) {
         throw new System.NotImplementedException();
     }
@@ -67,4 +75,5 @@ public class PLine : Segment {
             base.EndPoint = value;
         }
     }
+
 }

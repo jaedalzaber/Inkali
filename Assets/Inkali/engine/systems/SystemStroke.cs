@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class SystemStroke : EntitySystem, EntityListener {
     private List<Shape> shapes;
     public override void addedToEngine(Engine engine) {
+        vertices = new List<Vector3>();
+        uv = new List<Vector4>();
+        indices = new List<int>();
         shapes = engine.getEntitiesFor(Family.all(typeof(CompStroke)).get()).toList().Cast<Shape>().ToList();
     }
 
@@ -26,7 +31,7 @@ public class SystemStroke : EntitySystem, EntityListener {
     public override void update(float deltaTime) {
         foreach(Shape shape in shapes) {
             if (shape.UpdateStroke) {
-                ProcessShape(shape);
+                ProcessStroke(shape);
             }
         }
     }
@@ -36,35 +41,30 @@ public class SystemStroke : EntitySystem, EntityListener {
     Vector3 v3 = new Vector3();
     Vector3 v4 = new Vector3();
     int[] idx = new int[6];
+    private List<Vector3> vertices;
+    private List<Vector4> uv;
+    private List<int> indices;
+    private BBoxResult res;
 
-    private void ProcessShape(Shape shape) {
-        CompFill comp = shape.getComponent<CompFill>(typeof(CompFill));
-        List<Vector3> vertices = new List<Vector3>();
-        List<Vector4> uv = new List<Vector4>();
-        List<int> indices = new List<int>();
+    private void ProcessStroke(Shape shape){
+        CompStroke comp = shape.getComponent<CompStroke>(typeof(CompStroke));
         vertices.Clear();
         uv.Clear();
         indices.Clear();
-
-        BBoxResult res = shape.segments.Count>0 ? PathUtils.bbox(shape.segments[0]) : null;
-
+        
+        res = shape.segments.Count>0 ? PathUtils.bbox(shape.segments[0]) : null;
         foreach (Segment seg in shape.segments) {
-            if(seg.GetType() == typeof(PCubic)) {
-                PathUtils.ComputeCubic((PCubic)seg, vertices, uv, indices);
-            } else if (seg.GetType() == typeof(PQuadratic)) {
-                PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, indices);
-            } else if (seg.GetType() == typeof(PArc)) {
-                PathUtils.ComputeArc((PArc)seg, vertices, uv, indices);
+            Path stroke = new Path();
+            List<Segment> s = PathUtils.outline(seg, comp.strokeWidth);
+            foreach (Segment ss in s){
+                if(ss.GetType() == typeof(PQuad)){
+                    ((PQuad)ss).ToQuad(vertices, uv, indices);
+                } 
+                else
+                    stroke.Add(ss);
             }
-            BBoxResult r = PathUtils.bbox(seg);
-                if(r.x.max > res.x.max) res.x.max = r.x.max;
-                if(r.y.max > res.y.max) res.y.max = r.y.max;
-                if(r.x.min < res.x.min) res.x.min = r.x.min;
-                if(r.y.min < res.y.min) res.y.min = r.y.min;
+            ProcessShape(stroke);
         }
-
-        FillShape(shape, vertices, uv, indices);
-
         if(res != null){
             vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, 1.1f));
             vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, 1.1f));
@@ -91,22 +91,38 @@ public class SystemStroke : EntitySystem, EntityListener {
             indices.Add(indices.Count);    
         }
 
-        shape.meshFill.Clear();
-        shape.meshFill.subMeshCount = 2;
-        Debug.Log("verts: " + vertices.Count);
-        Debug.Log("uv: " + uv.Count);
-        shape.meshFill.SetVertices(vertices);
-        shape.meshFill.SetUVs(0, uv);
-        shape.meshFill.SetTriangles(indices.ToArray(), 0);
-        //indices.Clear();
-        shape.meshFill.SetTriangles(indices.ToArray(), 1);
+        shape.meshStroke.Clear();
+        shape.meshStroke.subMeshCount = 2;
+        shape.meshStroke.SetVertices(vertices);
+        shape.meshStroke.SetUVs(0, uv);
+        shape.meshStroke.SetTriangles(indices.ToArray(), 0);
+        shape.meshStroke.SetTriangles(indices.ToArray(), 1);
 
-        shape.UpdateFill = false;
+        shape.UpdateStroke = false;
     }
 
-    private void FillShape(Shape shape, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
+    private void ProcessShape(Shape shape) {
+        foreach (Segment seg in shape.segments) {
+            if(seg.GetType() == typeof(PCubic)) {
+                PathUtils.ComputeCubic((PCubic)seg, vertices, uv, indices);
+            } else if (seg.GetType() == typeof(PQuadratic)) {
+                PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, indices);
+            } else if (seg.GetType() == typeof(PArc)) {
+                PathUtils.ComputeArc((PArc)seg, vertices, uv, indices);
+            }
+            BBoxResult r = PathUtils.bbox(seg);
+                if(r.x.max > res.x.max) res.x.max = r.x.max;
+                if(r.y.max > res.y.max) res.y.max = r.y.max;
+                if(r.x.min < res.x.min) res.x.min = r.x.min;
+                if(r.y.min < res.y.min) res.y.min = r.y.min;
+        }
+
+    //    FillShape(shape, vertices, uv, indices);
+    }
+
+    private void FillShape(Shape shape, List<Vector3> vertices, List<Vector4> uv, /* List<Vector2> uv2,*/ List<int> indices) {
         if (shape.segments.Count > 1) {
-            for(int i=0; i< shape.segments.Count-1; i++) {
+            for(int i=shape.segments.Count-2; i> -1; i--) {
                 if(shape.segments[i].GetType() == typeof(PArc)) {
                     // AddLineVert(shape.segments[i].StartPoint.f3(), vertices, uv, indices);
                     // AddLineVert(new Vector3((float)((PArc)shape.segments[i]).CenterX, (float)((PArc)shape.segments[i]).CenterY, 1), vertices, uv, indices);
@@ -117,13 +133,13 @@ public class SystemStroke : EntitySystem, EntityListener {
                     vertices.Add(shape.segments[i + 1].EndPoint.f3());
 
                     if(i == shape.segments.Count-2 && shape.segments.Count > 1){
+                        uv.Add(new Vector4(1, 0, 1, 6));
                         uv.Add(new Vector4(1, 1, 1, 6));
-                        uv.Add(new Vector4(1, 1, 1, 6));
-                        uv.Add(new Vector4(1, 1, 1, 6));
+                        uv.Add(new Vector4(1, 0, 1, 6));
                     }else if(shape.segments[i+1].GetType() == typeof(PLine)){
                         uv.Add(new Vector4(1, 1, 1, 6));
-                        uv.Add(new Vector4(1, 1, 1, 6));
-                        uv.Add(new Vector4(1, 1, 1, 6));
+                        uv.Add(new Vector4(1, 0, 1, 6));
+                        uv.Add(new Vector4(1, 0, 1, 6));
                     }else {
                         uv.Add(new Vector4(1, 1, 1, 0));
                         uv.Add(new Vector4(1, 1, 1, 0));
@@ -134,7 +150,6 @@ public class SystemStroke : EntitySystem, EntityListener {
                     indices.Add(indices.Count);
                     indices.Add(indices.Count);
                 }
-
 
 
                 //shape.segments[0].StartPoint.print();

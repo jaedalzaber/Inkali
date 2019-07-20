@@ -1,4 +1,4 @@
-﻿Shader "Unlit/cubic_shader"
+﻿Shader "Inkali/Fill EvenOdd"
 {
 	Properties
 	{
@@ -64,6 +64,8 @@
 				// return fixed4(1,0,0, 1);
 				if (i.uv.w == 0)
 					discard;
+				// if (i.uv.w == 5)
+				// 	return fixed4(0,0,1, 1);
 				if (i.uv.w == 6){
 					float dist = distance(i.uv.xy, fixed2(1, 1));
 					float delta = fwidth(dist);
