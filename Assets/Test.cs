@@ -89,7 +89,7 @@ public class Test : MonoBehaviour {
         PaintSolid paint2 = new PaintSolid(Color.blue);
         p1.FillPaint = paint;
         p1.StrokePaint = paint2;
-        p1.StrokeWidth = .35f;
+        p1.StrokeWidth = .1f;
         c1 = new PCubic(new Vector2d(2,0), new Vector2d(-2,3), new Vector2d(4,3), new Vector2d(0,0));
         p1.Add(c1);
 
@@ -107,21 +107,25 @@ public class Test : MonoBehaviour {
         if(((Touch)points[0].GetComponent(typeof(Touch))).Touched()){
             c1.StartPoint=new Vector2d(points[0].transform.position.x, points[0].transform.position.y);
             p1.UpdateStroke = true;
+            p1.UpdateFill = true;
         }
 
         if(((Touch)points[1].GetComponent(typeof(Touch))).Touched()){
             c1.Ctrl1=new Vector2d(points[1].transform.position.x, points[1].transform.position.y);
             p1.UpdateStroke = true;
+            p1.UpdateFill = true;
         }
 
         if(((Touch)points[2].GetComponent(typeof(Touch))).Touched()){
             c1.Ctrl2=new Vector2d(points[2].transform.position.x, points[2].transform.position.y);
             p1.UpdateStroke = true;
+            p1.UpdateFill = true;
         }
 
         if(((Touch)points[3].GetComponent(typeof(Touch))).Touched()){
             c1.EndPoint=new Vector2d(points[3].transform.position.x, points[3].transform.position.y);
             p1.UpdateStroke = true;
+            p1.UpdateFill = true;
         }
     }
 }

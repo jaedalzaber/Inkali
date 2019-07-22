@@ -19,10 +19,10 @@
 			Stencil {
 				Ref 1
 				Comp Equal
-				Pass Keep
-				Fail Keep
-				ZFail Keep
-				WriteMask 0
+				Pass Zero
+				Fail Zero
+				ZFail Zero
+				WriteMask 1
 			}
 
 			CGPROGRAM
@@ -53,7 +53,7 @@
 			v2f vert (appdata v)
 			{
 				v2f o;
-				o.vertex = UnityObjectToClipPos(v.vertex);
+				o.vertex = UnityObjectToClipPos(float4(v.vertex.xy, 1.1, v.vertex.w));
 				o.uv = v.uv;
 				// o.uv2 = v.uv2;
 				return o;

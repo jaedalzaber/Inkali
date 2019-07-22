@@ -18,7 +18,7 @@ Shader "Inkali/Fill NonZero"
 		{
 			Cull off
 			// ZWrite off
-			ZTest Less
+			ZTest NotEqual
 			Blend SrcAlpha OneMinusSrcAlpha
 			Stencil {
 				Ref 0
@@ -26,7 +26,7 @@ Shader "Inkali/Fill NonZero"
 				Pass Keep
 				Fail Keep
 				ZFail Keep
-				WriteMask 2
+				// WriteMask 2
 			}
 
 			CGPROGRAM
@@ -66,6 +66,7 @@ Shader "Inkali/Fill NonZero"
 			fixed4 frag(v2f i) : SV_Target
 			{
 				if (i.uv.w == 5 || i.uv.w == 0){
+					// return fixed4(1,0,0,  1 * _inColor.w);
                     discard;
 				}
 				if (i.uv.w == 1) {
@@ -79,8 +80,10 @@ Shader "Inkali/Fill NonZero"
 					float sd = (i.uv.x * i.uv.x * i.uv.x - i.uv.y * i.uv.z) / sqrt(fx*fx + fy * fy);
 					float alpha = .2 - sd;
 
-					if (alpha < 1)       // Inside
+					if (alpha < 1) {      // Inside
+						// return fixed4(1,0,0,  alpha * _inColor.w);
 						discard;
+					}
 					// else {
 					// 	// Near boundary
 						
@@ -88,6 +91,7 @@ Shader "Inkali/Fill NonZero"
 					// }
 				}
 				// return fixed4(1,0,0,  1 * _inColor.w);
+				// discard;
 				return fixed4(_inColor.xyz, 1 * _inColor.w);
 			}
 			ENDCG
@@ -100,11 +104,11 @@ Shader "Inkali/Fill NonZero"
 			ZTest NotEqual   
 			Blend SrcAlpha OneMinusSrcAlpha
 			Stencil {
-				Ref 1
-				Comp Equal
-				Pass Keep
-				Fail Keep
-				ZFail Keep
+				Ref 0
+				Comp NotEqual
+				Pass Zero
+				Fail Zero
+				ZFail Zero
 				WriteMask 0
 			}
 
@@ -301,15 +305,15 @@ Shader "Inkali/Fill NonZero"
 		Pass
 		{
 			Cull off
-			ZWrite off
+			// ZWrite off
 			
 			Blend SrcAlpha OneMinusSrcAlpha
 			Stencil {
 				Ref 0
 				Comp Equal
-				Pass Keep
-				Fail Keep
-				ZFail Keep
+				Pass Zero
+				Fail Zero
+				ZFail Zero
 				WriteMask 0
 			}
 			

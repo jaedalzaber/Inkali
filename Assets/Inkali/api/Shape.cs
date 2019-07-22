@@ -48,7 +48,7 @@ public abstract class Shape : Entity {
         objStroke = new GameObject(obj.name + "_stroke");
         objStroke.transform.parent = obj.transform;
 
-        UpdateFill= false;
+        // UpdateFill= false;
 
         // Create Fill
         MeshFilter meshFilterFill = objFill.AddComponent(typeof(MeshFilter)) as MeshFilter;
