@@ -16,12 +16,13 @@
 			Cull off
 			// ZWrite off
 			Blend SrcAlpha OneMinusSrcAlpha
+			ZTest Less
 			Stencil {
 				Ref 1
 				Comp Equal
-				Pass Zero
-				Fail Zero
-				ZFail Zero
+				Pass Keep
+				Fail Keep
+				ZFail Keep
 				WriteMask 1
 			}
 
@@ -53,7 +54,7 @@
 			v2f vert (appdata v)
 			{
 				v2f o;
-				o.vertex = UnityObjectToClipPos(float4(v.vertex.xy, 1.1, v.vertex.w));
+				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = v.uv;
 				// o.uv2 = v.uv2;
 				return o;
@@ -65,7 +66,7 @@
 				if (i.uv.w == 0)
 					discard;
 				// if (i.uv.w == 5)
-				// 	return fixed4(0,0,1, 1);
+				// 	discard;
 				if (i.uv.w == 6){
 					float dist = distance(i.uv.xy, fixed2(1, 1));
 					float delta = fwidth(dist);
@@ -222,7 +223,7 @@
 				Pass Keep
 				Fail Keep
 				ZFail Keep
-				WriteMask 0
+				WriteMask 1
 			}
 			
 			CGPROGRAM
@@ -253,8 +254,7 @@
 			v2f vert (appdata v)
 			{
 				v2f o;
-				float4 u = float4(v.vertex.x, v.vertex.y, v.vertex.z, 1);
-				float4 vert = UnityObjectToClipPos(u);
+				float4 vert = UnityObjectToClipPos(v.vertex);
 				o.vertex = vert;
 				o.uv = v.uv;
 				// o.uv2 = v.uv2;
@@ -263,9 +263,11 @@
 			
 			fixed4 frag(v2f i) : SV_Target
 			{
+				// return fixed4(0,0,1, 1);
 				if (i.uv.w == 5 || i.uv.w == 0)
 					discard;
 				if (i.uv.w == 6){
+					
 					float dist = distance(i.uv.xy, fixed2(1, 1));
 					float delta = fwidth(dist);
 					float alpha = 1 - smoothstep(0, delta, i.uv.y);
@@ -298,9 +300,9 @@
 						discard;
 					else{
 						alpha = 1-alpha;
-						// return fixed4(1,0,0, alpha );
 
 					}
+						// return fixed4(1,0,0, alpha  * _inColor.w);
 					return fixed4(_inColor.xyz, alpha * _inColor.w);
 				}
 
@@ -406,5 +408,68 @@
 			}
 			ENDCG
 		}
+
+		Pass
+		{
+			Cull off
+			ZWrite off
+			Blend SrcAlpha OneMinusSrcAlpha
+			ZTest NotEqual
+			Stencil {
+				Ref 0
+				Comp NotEqual
+				Pass Zero
+				Fail Zero
+				ZFail Zero
+				// WriteMask 1
+			}
+
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+			
+			#include "UnityCG.cginc"
+
+			struct appdata
+			{
+				float4 vertex : POSITION;
+				float4 uv : TEXCOORD0;
+				// float4 uv2 : TEXCOORD1;
+			};
+
+			struct v2f
+			{
+				float4 uv : TEXCOORD0;
+				// float4 uv2 : TEXCOORD1;
+				float4 vertex : SV_POSITION;
+			};
+
+			sampler2D _MainTex;
+			float4 _MainTex_ST;
+			fixed4 _inColor;
+			fixed4 _outColor;
+			
+			v2f vert (appdata v)
+			{
+				v2f o;
+				o.vertex = UnityObjectToClipPos(v.vertex);
+				o.uv = v.uv;
+				// o.uv2 = v.uv2;
+				return o;
+			}
+			
+			fixed4 frag(v2f i) : SV_Target
+			{
+				// return fixed4(1,0,0, 1);
+				if (i.uv.w != 5)
+					discard;
+				// if (i.uv.w == 5)
+				// 	return fixed4(0,0,1, 1);
+				return fixed4(_inColor.xyz, 0 * _inColor.w);
+			}
+			ENDCG
+		}
 	}
+
+
 }

@@ -8,6 +8,10 @@ public class Path : Shape {
         base.Add(segment);
     }
 
+    public new void AddSeperate(Segment segment) {
+        base.AddSeperate(segment);
+    }
+
     public new void AddAll(params Segment[] segments) {
         base.AddAll(segments);
     }

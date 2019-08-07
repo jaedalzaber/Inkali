@@ -157,6 +157,10 @@ namespace UnityEngine {
             return new Vector3((float)x, (float)y, 1);
         }
 
+        public Vector3 f3(float z) {
+            return new Vector3((float)x, (float)y, z);
+        }
+
         public Vector2d Set(Vector2d v) {
             this.x = v.x;
             this.y = v.y;

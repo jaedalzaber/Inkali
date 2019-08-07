@@ -4,6 +4,7 @@ using UnityEngine;
 public abstract class Segment {
     protected Vector2d startPoint;
     protected Vector2d endPoint;
+    public bool cut = false;
 
     public abstract Vector2d DerivativeAt(double t);
     public abstract Vector2d NormalAt(double t, int dir);

@@ -59,7 +59,7 @@ public class PathUtils {
         }
     }
 
-    public static Vector2d ComputeCubic(PCubic cubic, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
+    public static Vector2d ComputeCubic(PCubic cubic, List<Vector3> vertices, List<Vector4> uv, List<int> indices, float z) {
         start = cubic.StartPoint.f();
         ctrl1 = cubic.Ctrl1.f();
         ctrl2 = cubic.Ctrl2.f();
@@ -76,14 +76,18 @@ public class PathUtils {
                 break;
         }
         verts.Clear();
-        CurveType curve_type = compute((float)start.x, (float)start.y, (float)ctrl1.x, (float)ctrl1.y, (float)ctrl2.x, (float)ctrl2.y, (float)end.x, (float)end.y, -1,
-            verts, uv, indices);
+        List<Vector3> v = new List<Vector3>();
+        List<Vector4> u = new List<Vector4>();
+        List<int> i = new List<int>();
+
+        CurveType curve_type = compute(cubic, (float)start.x, (float)start.y, (float)ctrl1.x, (float)ctrl1.y, (float)ctrl2.x, (float)ctrl2.y, (float)end.x, (float)end.y, -1,
+            vertices, uv, indices, z);
 
        int ol = orientationLoop(start, ctrl1, ctrl2, end);
         Vector2d point = new Vector2d();
         PCubic c = new PCubic(start, ctrl1, ctrl2, end);
 
-
+        
         //if (curve_type == CurveType.LOOP && ol == -1 && verts.Count / 3 == 6) {
         //    l.p1 = new Vector2d(start);
         //    l.p2 = new Vector2d(verts[6].x, verts[6].y);
@@ -112,12 +116,15 @@ public class PathUtils {
         //    AddVertexPlain(new Vertex(point.f()), verts, uv, indices);
         //    AddVertexPlain(new Vertex(end), verts, uv, indices);
         //}
-        vertices.AddRange(verts);
+
+        // vertices.AddRange(verts);
+        // 
+        
         return point;
     }
 
-    private static CurveType compute(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int recursiveType,
-        List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
+    private static CurveType compute(PCubic c, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int recursiveType,
+        List<Vector3> vertices, List<Vector4> uv, List<int> indices, float z) {
         Result res = new Result(x0, y0, x1, y1, x2, y2, x3, y3);
         CurveType curve_type = res.curve_type;
 
@@ -300,9 +307,9 @@ public class PathUtils {
             float x0123 = (((x123 - x012) * splitParam) + x012);
             float y0123 = (((y123 - y012) * splitParam) + y012);
 
-            vertices.Add(new Vector3(x0, y0, 1));
-            vertices.Add(new Vector3(x0123, y0123, 1));
-            vertices.Add(new Vector3(x3, y3, 1));
+            vertices.Add(new Vector3(x0, y0, z));
+            vertices.Add(new Vector3(x0123, y0123, z));
+            vertices.Add(new Vector3(x3, y3, z));
             uv.Add(new Vector4(1, 1, 1, 6));
             uv.Add(new Vector4(1, 1, 1, 6));
             uv.Add(new Vector4(1, 1, 1, 6));
@@ -312,12 +319,12 @@ public class PathUtils {
 
             if ((errorLoop == 1)) {
                 //  flip second
-                compute(x0, y0, x01, y01, x012, y012, x0123, y0123, 0, vertices, uv, indices);
-                compute(x0123, y0123, x123, y123, x23, y23, x3, y3, 1, vertices, uv, indices);
+                compute(c, x0, y0, x01, y01, x012, y012, x0123, y0123, 0, vertices, uv, indices, z);
+                compute(c, x0123, y0123, x123, y123, x23, y23, x3, y3, 1, vertices, uv, indices, z);
             } else if ((errorLoop == 2)) {
                 //  flip first
-                compute(x0, y0, x01, y01, x012, y012, x0123, y0123, 1, vertices, uv, indices);
-                compute(x0123, y0123, x123, y123, x23, y23, x3, y3, 0, vertices, uv, indices);
+                compute(c, x0, y0, x01, y01, x012, y012, x0123, y0123, 1, vertices, uv, indices, z);
+                compute(c, x0123, y0123, x123, y123, x23, y23, x3, y3, 0, vertices, uv, indices, z);
             }
             return curve_type;
         } 
@@ -338,7 +345,7 @@ public class PathUtils {
 
         }
 
-        Triangulation(x0, y0, x1, y1, x2, y2, x3, y3, klm, vertices, uv, indices);
+        Triangulation(c, x0, y0, x1, y1, x2, y2, x3, y3, klm, vertices, uv, indices, z);
         return curve_type;
     }
     private static Vertex v0 = new Vertex();
@@ -347,26 +354,26 @@ public class PathUtils {
     private static Vertex v3 = new Vertex();
     private static Vertex[] vertices = new Vertex[4] { v0, v1, v2, v3};
 
-    private static void AddVertex(Vertex v, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
-        vertices.Add(new Vector3(v.xy.x, v.xy.y, 1));
-        uv.Add(new Vector4(v.coords.x, v.coords.y, v.coords.z, 1));
+    private static void AddVertex(PCubic c, Vertex v, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
+        vertices.Add(new Vector3(v.xyz.x, v.xyz.y, v.xyz.z));
+        uv.Add(new Vector4(v.coords.x, v.coords.y, v.coords.z, c.cut == true ? 7 : 1));
         indices.Add(indices.Count);
     }
 
     private static void AddVertexPlain(Vertex v, List<Vector3> vertices, List<Vector4> uv,  List<int> indices) {
-        vertices.Add(new Vector3(v.xy.x, v.xy.y, 1));
+        vertices.Add(new Vector3(v.xyz.x, v.xyz.y, v.xyz.z));
         uv.Add(new Vector4(v.coords.x, v.coords.y, v.coords.z, 0));
         indices.Add(indices.Count);
     }
-    private static void Triangulation(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, 
-    float[] klm, List<Vector3> verts, List<Vector4> uv, List<int> idx) {
-        v0.Set(x0, y0, klm[0], klm[1], klm[2], 1, 0, 0);
-        v1.Set(x1, y1, klm[3], klm[4], klm[5], 1, 1, 1);
-        v2.Set(x2, y2, klm[6], klm[7], klm[8], 1, 1, 1);
-        v3.Set(x3, y3, klm[9], klm[10], klm[11], 1, 1, 0);
+    private static void Triangulation(PCubic c, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, 
+    float[] klm, List<Vector3> verts, List<Vector4> uv, List<int> idx, float z) {
+        v0.Set(x0, y0, z, klm[0], klm[1], klm[2], 1);
+        v1.Set(x1, y1, z, klm[3], klm[4], klm[5], 1);
+        v2.Set(x2, y2, z, klm[6], klm[7], klm[8], 1);
+        v3.Set(x3, y3, z, klm[9], klm[10], klm[11], 1);
         for (int i = 0; (i < 4); i++) {
             for (int j = (i + 1); (j < 4); j++) {
-                if (approxEqual(vertices[i].xy, vertices[j].xy)) {
+                if (approxEqual(vertices[i].xyz, vertices[j].xyz)) {
                     int[] indices = new int[] { 0, 0, 0 };
                     int index = 0;
                     for (int k = 0; (k < 4); k++) {
@@ -375,9 +382,9 @@ public class PathUtils {
                         }
 
                     }
-                    AddVertex(vertices[indices[0]], verts, uv, idx);
-                    AddVertex(vertices[indices[1]], verts, uv, idx);
-                    AddVertex(vertices[indices[2]], verts, uv, idx);
+                    AddVertex(c, vertices[indices[0]], verts, uv, idx);
+                    AddVertex(c, vertices[indices[1]], verts, uv, idx);
+                    AddVertex(c, vertices[indices[2]], verts, uv, idx);
                     return;
                 }
 
@@ -395,11 +402,11 @@ public class PathUtils {
 
             }
 
-            if (pointInTriangle(vertices[i].xy, vertices[indices[0]].xy, vertices[indices[1]].xy, vertices[indices[2]].xy)) {
+            if (pointInTriangle(vertices[i].xyz, vertices[indices[0]].xyz, vertices[indices[1]].xyz, vertices[indices[2]].xyz)) {
                 for (int j = 0; (j < 3); j++) {
-                    AddVertex(vertices[indices[(j % 3)]], verts, uv, idx);
-                    AddVertex(vertices[indices[((j + 1) % 3)]], verts, uv, idx);
-                    AddVertex(vertices[i], verts, uv, idx);
+                    AddVertex(c, vertices[indices[(j % 3)]], verts, uv, idx);
+                    AddVertex(c, vertices[indices[((j + 1) % 3)]], verts, uv, idx);
+                    AddVertex(c, vertices[i], verts, uv, idx);
                 }
 
                 return;
@@ -407,53 +414,53 @@ public class PathUtils {
 
         }
 
-        if (intersect(vertices[0].xy, vertices[2].xy, vertices[1].xy, vertices[3].xy)) {
-            if ((vertices[2].cpy() - vertices[0].xy).sqrMagnitude < (vertices[3].cpy() - vertices[1].xy).sqrMagnitude) {
-                AddVertex(vertices[0], verts, uv, idx);
-                AddVertex(vertices[1], verts, uv, idx);
-                AddVertex(vertices[2], verts, uv, idx);
-                AddVertex(vertices[0], verts, uv, idx);
-                AddVertex(vertices[2], verts, uv, idx);
-                AddVertex(vertices[3], verts, uv, idx);
+        if (intersect(vertices[0].xyz, vertices[2].xyz, vertices[1].xyz, vertices[3].xyz)) {
+            if ((vertices[2].cpy() - vertices[0].xyz).sqrMagnitude < (vertices[3].cpy() - vertices[1].xyz).sqrMagnitude) {
+                AddVertex(c, vertices[0], verts, uv, idx);
+                AddVertex(c, vertices[1], verts, uv, idx);
+                AddVertex(c, vertices[2], verts, uv, idx);
+                AddVertex(c, vertices[0], verts, uv, idx);
+                AddVertex(c, vertices[2], verts, uv, idx);
+                AddVertex(c, vertices[3], verts, uv, idx);
             } else {
-                AddVertex(vertices[0], verts, uv, idx);
-                AddVertex(vertices[1], verts, uv, idx);
-                AddVertex(vertices[3], verts, uv, idx);
-                AddVertex(vertices[1], verts, uv, idx);
-                AddVertex(vertices[2], verts, uv, idx);
-                AddVertex(vertices[3], verts, uv, idx);
+                AddVertex(c, vertices[0], verts, uv, idx);
+                AddVertex(c, vertices[1], verts, uv, idx);
+                AddVertex(c, vertices[3], verts, uv, idx);
+                AddVertex(c, vertices[1], verts, uv, idx);
+                AddVertex(c, vertices[2], verts, uv, idx);
+                AddVertex(c, vertices[3], verts, uv, idx);
             }
-        } else if (intersect(vertices[0].xy, vertices[3].xy, vertices[1].xy, vertices[2].xy)) {
-            if ((vertices[3].cpy() - vertices[0].xy).sqrMagnitude < (vertices[2].cpy() - vertices[1].xy).sqrMagnitude) {
-                AddVertex(vertices[0], verts, uv, idx);
-                AddVertex(vertices[1], verts, uv, idx);
-                AddVertex(vertices[3], verts, uv, idx);
-                AddVertex(vertices[0].copyFlip(), verts, uv, idx);
-                AddVertex(vertices[3].copyFlip(), verts, uv, idx);
-                AddVertex(vertices[2].copyFlip(), verts, uv, idx);
+        } else if (intersect(vertices[0].xyz, vertices[3].xyz, vertices[1].xyz, vertices[2].xyz)) {
+            if ((vertices[3].cpy() - vertices[0].xyz).sqrMagnitude < (vertices[2].cpy() - vertices[1].xyz).sqrMagnitude) {
+                AddVertex(c, vertices[0], verts, uv, idx);
+                AddVertex(c, vertices[1], verts, uv, idx);
+                AddVertex(c, vertices[3], verts, uv, idx);
+                AddVertex(c, vertices[0].copyFlip(), verts, uv, idx);
+                AddVertex(c, vertices[3].copyFlip(), verts, uv, idx);
+                AddVertex(c, vertices[2].copyFlip(), verts, uv, idx);
             } else {
-                AddVertex(vertices[0], verts, uv, idx);
-                AddVertex(vertices[1], verts, uv, idx);
-                AddVertex(vertices[3], verts, uv, idx);
-                AddVertex(vertices[2].copyFlip(), verts, uv, idx);
-                AddVertex(vertices[0].copyFlip(), verts, uv, idx);
-                AddVertex(vertices[3].copyFlip(), verts, uv, idx);
+                AddVertex(c, vertices[0], verts, uv, idx);
+                AddVertex(c, vertices[1], verts, uv, idx);
+                AddVertex(c, vertices[3], verts, uv, idx);
+                AddVertex(c, vertices[2].copyFlip(), verts, uv, idx);
+                AddVertex(c, vertices[0].copyFlip(), verts, uv, idx);
+                AddVertex(c, vertices[3].copyFlip(), verts, uv, idx);
             }
 
-        } else if ((vertices[1].cpy() - vertices[0].xy).sqrMagnitude < (vertices[3].cpy() - vertices[2].xy).sqrMagnitude) {
-            AddVertex(vertices[0], verts, uv, idx);
-            AddVertex(vertices[2], verts, uv, idx);
-            AddVertex(vertices[1], verts, uv, idx);
-            AddVertex(vertices[0], verts, uv, idx);
-            AddVertex(vertices[1], verts, uv, idx);
-            AddVertex(vertices[3], verts, uv, idx);
+        } else if ((vertices[1].cpy() - vertices[0].xyz).sqrMagnitude < (vertices[3].cpy() - vertices[2].xyz).sqrMagnitude) {
+            AddVertex(c, vertices[0], verts, uv, idx);
+            AddVertex(c, vertices[2], verts, uv, idx);
+            AddVertex(c, vertices[1], verts, uv, idx);
+            AddVertex(c, vertices[0], verts, uv, idx);
+            AddVertex(c, vertices[1], verts, uv, idx);
+            AddVertex(c, vertices[3], verts, uv, idx);
         } else {
-            AddVertex(vertices[0], verts, uv, idx);
-            AddVertex(vertices[2], verts, uv, idx);
-            AddVertex(vertices[3], verts, uv, idx);
-            AddVertex(vertices[3], verts, uv, idx);
-            AddVertex(vertices[2], verts, uv, idx);
-            AddVertex(vertices[1], verts, uv, idx);
+            AddVertex(c, vertices[0], verts, uv, idx);
+            AddVertex(c, vertices[2], verts, uv, idx);
+            AddVertex(c, vertices[3], verts, uv, idx);
+            AddVertex(c, vertices[3], verts, uv, idx);
+            AddVertex(c, vertices[2], verts, uv, idx);
+            AddVertex(c, vertices[1], verts, uv, idx);
         }
 
     }
@@ -756,7 +763,12 @@ public class PathUtils {
         //		System.out.println("cross: "+cross+", dot: "+dot);
         return Mathd.Atan2(cross, dot);
     }
-
+    public static double Angle(Vector3 o, Vector3 v1, Vector3 v2) {
+        double dx1 = v1.x - o.x, dy1 = v1.y - o.y, dx2 = v2.x - o.x, dy2 = v2.y - o.y, cross = dx1 * dy2 - dy1 * dx2,
+                dot = dx1 * dx2 + dy1 * dy2;
+        //		System.out.println("cross: "+cross+", dot: "+dot);
+        return Mathd.Atan2(cross, dot);
+    }
     /*
 	 * // round as string, to avoid rounding errors round: function(v, d) { var s =
 	 * "" + v; var pos = s.indexOf("."); return parseFloat(s.substring(0, pos + 1 +
@@ -1175,12 +1187,12 @@ public class PathUtils {
             t1 = t2;
         }
     //		System.out.println("Pass1 Count: " + pass1.Count);
-    for (int i = 0; i < pass1.Count; i++) {
+        for (int i = 0; i < pass1.Count; i++) {
             Segment p1 = pass1[i];
             t1 = 0.0;
             t2 = 0.0;
         B: while (t2 <= 1.0) {
-                for (t2 = t1 + step; t2 <= 1.0 + step; t2 += step) {
+                for (t2 = t1 + step; t2 <= (1.0 + step); t2 += step) {
                     segment = split(p1, t1, t2);
                     if (!simple(segment)) {
                         t2 -= step;
@@ -1262,7 +1274,7 @@ public class PathUtils {
         double ss = n1[0] * n2[0] + n1[1] * n2[1];
         double angle = Mathd.Abs(Mathd.Acos(ss));
 
-        return angle < Mathd.PI / 4.5;
+        return angle < Mathd.PI / 3.6f;
     }
 
     public static double[] normal(Segment c, double t) {
@@ -1408,7 +1420,10 @@ public class PathUtils {
     public static bool Clockwise(Segment s) {
         Vector2d[] points = s.getPoints();
         double angle = Angle(points[0], points[s.getPoints().Length - 1], points[1]);
-        return angle > 0.0;
+        // double angle2 = Angle(points[s.getPoints().Length - 1], points[2], points[1]);
+        // Debug.Log("same: " + (angle > 0.0 && angle2 > 0.0));
+        
+        return angle > 0.0  ;
     }
 
     private void LineToQuad(PLine line, List<Vector3> vertices, List<Vector4> uv,List<int> indices, double d){
@@ -1419,12 +1434,26 @@ public class PathUtils {
         double d2 = d.Length > 1 ? d[1] : d[0];
         List<Segment> reduced = reduce(c);
         List<Segment> segments = new List<Segment>();
+
         
         int len = reduced.Count;
         List<Segment> fcurves = new List<Segment>();
         List<Segment> bcurves = new List<Segment>();
         double alen = 0.0;
         double tlen = length(c, 10);
+
+        // Fix Stroke sharp corner arteffect 
+        DoubleArray extrema = Extrema(c).values;
+        // if (extrema.indexOf(0.0) != -1) {
+        //     extrema.removeIndex(0);
+        // }
+        // if (extrema.indexOf(1.0) != -1) {
+        //     extrema.removeIndex(extrema.size-1);
+        // }
+        for (int i = 1; i < extrema.size; i++) {
+            Vector2d p = c.ValueAt(extrema.get(i));
+            segments.Add(new PCirFsix((float)d2, c.ValueAt(extrema.get(i)).f()));
+        }
 
         //TODO: Fix graduated stroke
         bool graduated = /*d.Length == 4 */ false;
@@ -1441,9 +1470,24 @@ public class PathUtils {
             } else {
                 Segment f = scale(segment, d[0], null);
                 Segment b = scale(segment, -d2, null);
+                // b.cut = true;
+                Vector2d[] points = b.getPoints();          
+                double angle = Angle(points[0], points[b.getPoints().Length - 1], points[1]);
+                // Debug.Log("angle: "+reduced.IndexOf(segment)+": " + angle);
+                // if(Clockwise(f) == true){
+                //     f.cut = false;
+                //     b.cut = true;
+                // } else {
+                //     f.cut = true;
+                //     b.cut = false;
+                // }
+                // Fixes AA problem on strokes
+                f.cut = Clockwise(f) ? false : true;
+                b.cut = Clockwise(b) ? true : false;
 
                 PQuad quad = new PQuad(f.StartPoint, f.EndPoint, b.EndPoint, b.StartPoint);
                 segments.Add(quad);
+                
                 fcurves.Add(f);
                 bcurves.Add(b);
             }
@@ -1454,6 +1498,20 @@ public class PathUtils {
         foreach (Segment segment in bcurves)
             segment.reverse();
         bcurves.Reverse();
+
+        // foreach (Segment b in bcurves)
+        // {
+        //     Vector2d[] points = b.getPoints();          
+        //     double angle = Angle(points[0], points[b.getPoints().Length - 1], points[1]);
+        //     double angle2 = Angle(points[b.getPoints().Length - 1], points[2], points[1]);
+        //     if(angle > 0 && angle2 < 0){
+        //         Debug.Log("angle1 "+bcurves.IndexOf(b)+": " + angle);
+        //         Debug.Log("angle2 "+bcurves.IndexOf(b)+": " + angle2);
+        //         Debug.Log("problem " );
+        //         bcurves.RemoveAt(bcurves.IndexOf(b));
+        //         fcurves.RemoveAt(bcurves.IndexOf(b));
+        //     }
+        // }
 
         // form the endcaps as lines
         Vector2d fs = fcurves[0].getPoints()[0];

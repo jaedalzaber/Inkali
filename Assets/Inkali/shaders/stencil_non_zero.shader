@@ -9,6 +9,9 @@ Shader "Inkali/Stencil NonZero"
 		SubShader
 		{
 			Tags { "RenderType" = "Opaque" "Queue" = "Transparent" }
+
+		Pass
+		{
 			Cull off
 			ZWrite off
 			// ZTest Less  
@@ -26,8 +29,6 @@ Shader "Inkali/Stencil NonZero"
 				ZFailBack DecrWrap
 			}
 
-		Pass
-		{
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
@@ -61,7 +62,7 @@ Shader "Inkali/Stencil NonZero"
 
 			fixed4 frag(v2f i) : SV_Target
 			{   
-				if (i.uv.w == 5) {
+				if (i.uv.w == 5 || i.uv.w == 0 ) {
 					discard;
 				 }
 				if (i.uv.w == 1) {
@@ -85,6 +86,27 @@ Shader "Inkali/Stencil NonZero"
 					return col;
 				 }
 
+				 if (i.uv.w == 7) {
+					float3 px = ddx(i.uv.xyz);
+					float3 py = ddy(i.uv.xyz);
+
+					// Chain rule
+					float fx = (3 * i.uv.x *i.uv.x)*px.x - (i.uv.z)*px.y - (i.uv.y)*px.z;
+					float fy = (3 * i.uv.x *i.uv.x)*py.x - (i.uv.z)*py.y - (i.uv.y)*py.z;
+					// Signed distance
+					float sd = (i.uv.x * i.uv.x * i.uv.x - i.uv.y * i.uv.z) / sqrt(fx*fx + fy * fy);
+					float alpha = 0.2 - sd;
+					fixed4 col = fixed4(_inColor.xyz, 1);
+
+					// float t = i.uv.x * i.uv.x * i.uv.x - i.uv.y * i.uv.z;
+					// float a = clamp(sign(t), 0.0, 1.0);
+					// if(a==1.0) discard;
+
+					if (alpha < 0 )  // Outside
+						discard;
+					return col;
+				 }
+
 				 else if (i.uv.w == 2) {
 					 // sample the texture
 					 float2 px = ddx(i.uv.xy);
@@ -99,6 +121,12 @@ Shader "Inkali/Stencil NonZero"
 					 if (alpha < 0)  // Outside
 						 discard;
 					 return _inColor;
+				 }
+				 else if(i.uv.w == 4){
+					 if ((i.uv.x * i.uv.x + i.uv.y * i.uv.y) > 1) {
+						discard;
+					}
+					
 				 }
 
 				else if (i.uv.w == 3) {
@@ -138,7 +166,7 @@ Shader "Inkali/Stencil NonZero"
 
 					return _inColor;
 				}
-				 return fixed4(_inColor.xyz, 1);
+				return fixed4(1,0,0, 1);
 			}
 			ENDCG
 		}

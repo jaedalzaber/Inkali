@@ -92,10 +92,10 @@ public class PQuad : Segment {
         points[3] = endPoint;
     }
 
-    public void ToQuad(List<Vector3> vertices, List<Vector4> uv, List<int> indices){
-        vertices.Add(startPoint.f3());
-        vertices.Add(ctrl1.f3());
-        vertices.Add(endPoint.f3());
+    public void ToQuad(List<Vector3> vertices, List<Vector4> uv, List<int> indices, float z){
+        vertices.Add(startPoint.f3(z));
+        vertices.Add(ctrl1.f3(z));
+        vertices.Add(endPoint.f3(z));
 
         uv.Add(new Vector4(1, 1, 1, 6));
         uv.Add(new Vector4(1, 1, 1, 6));
@@ -105,9 +105,9 @@ public class PQuad : Segment {
         indices.Add(indices.Count);
         indices.Add(indices.Count);       
 
-        vertices.Add(ctrl1.f3());
-        vertices.Add(ctrl2.f3());
-        vertices.Add(endPoint.f3());
+        vertices.Add(ctrl1.f3(z));
+        vertices.Add(ctrl2.f3(z));
+        vertices.Add(endPoint.f3(z));
 
         uv.Add(new Vector4(1, 1, 1, 6));
         uv.Add(new Vector4(1, 1, 1, 6));

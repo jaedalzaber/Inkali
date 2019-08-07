@@ -33,12 +33,6 @@ public class SystemFill : EntitySystem, EntityListener {
         }
     }
 
-    Vector3 v1 = new Vector3();
-    Vector3 v2 = new Vector3();
-    Vector3 v3 = new Vector3();
-    Vector3 v4 = new Vector3();
-    int[] idx = new int[6];
-
     private void ProcessShape(Shape shape) {
         CompFill comp = shape.getComponent<CompFill>(typeof(CompFill));
         List<Vector3> vertices = new List<Vector3>();
@@ -54,7 +48,7 @@ public class SystemFill : EntitySystem, EntityListener {
 
         foreach (Segment seg in shape.segments) {
             if(seg.GetType() == typeof(PCubic)) {
-                PathUtils.ComputeCubic((PCubic)seg, vertices, uv, indices);
+                PathUtils.ComputeCubic((PCubic)seg, vertices, uv, indices, shape.Depth);
             } else if (seg.GetType() == typeof(PQuadratic)) {
                 PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, indices);
             } else if (seg.GetType() == typeof(PArc)) {
@@ -70,9 +64,9 @@ public class SystemFill : EntitySystem, EntityListener {
         FillShape(shape, vertices, uv, indices);
 
         if(res != null){
-            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, 1.1f));
-            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, 1.1f));
-            vertices.Add(new Vector3((float)res.x.min, (float)res.y.max, 1.1f));
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, shape.Depth ));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, shape.Depth ));
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.max, shape.Depth ));
 
             uv.Add(new Vector4(1, 1, 1, 5));
             uv.Add(new Vector4(1, 1, 1, 5));
@@ -86,9 +80,9 @@ public class SystemFill : EntitySystem, EntityListener {
             indices.Add(indices.Count);
             indices.Add(indices.Count);       
 
-            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, 1.1f));
-            vertices.Add(new Vector3((float)res.x.max, (float)res.y.min, 1.1f));
-            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, 1.1f));
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, shape.Depth));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.min, shape.Depth));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, shape.Depth));
 
             uv.Add(new Vector4(1, 1, 1, 5));
             uv.Add(new Vector4(1, 1, 1, 5));
@@ -126,9 +120,9 @@ public class SystemFill : EntitySystem, EntityListener {
                     // AddLineVert(new Vector3((float)((PArc)shape.segments[i]).CenterX, (float)((PArc)shape.segments[i]).CenterY, 1), vertices, uv, indices);
                     // AddLineVert(shape.segments[i].EndPoint.f3(), vertices, uv, indices);
                 } else {
-                    vertices.Add(shape.segments[0].StartPoint.f3());
-                    vertices.Add(shape.segments[i].EndPoint.f3());
-                    vertices.Add(shape.segments[i + 1].EndPoint.f3());
+                    vertices.Add(shape.segments[0].StartPoint.f3(shape.Depth));
+                    vertices.Add(shape.segments[i].EndPoint.f3(shape.Depth));
+                    vertices.Add(shape.segments[i + 1].EndPoint.f3(shape.Depth));
 
                     if(i == shape.segments.Count-2 && shape.segments.Count > 1){
                         uv.Add(new Vector4(1, 0, 1, 6));

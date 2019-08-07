@@ -8,6 +8,7 @@ public class Test : MonoBehaviour {
     private ImmutableArray<Entity> entities;
     private GameObject o;
     private Path p1;
+    private Path p2;
     private PaintSolid paint;
 
     public GameObject[] points;
@@ -77,8 +78,9 @@ public class Test : MonoBehaviour {
 
 
         p1 = engine.CreatePath("p1");
-        p1.Add(new PCubic(new Vector2d(-2,-2), new Vector2d(0,4), new Vector2d(2,4), new Vector2d(4,-2)));
-        // p1.Add(new PCubic(new Vector2d(5, -2), new Vector2d(2, -3), new Vector2d(0, -2)));
+        // p1.Add(new PCubic(new Vector2d(-2,-2), new Vector2d(0,4), new Vector2d(2,4), new Vector2d(4,-2)));
+        p2 = engine.CreatePath("p2");
+        // p2.Add(new PCubic(new Vector2d(2, -2), new Vector2d(-4, 3), new Vector2d(6, 3), new Vector2d(0, -2)));
         // p1.Add(new PCubic(new Vector2d(-1, 2), new Vector2d(3, 3), new Vector2d(4, 1)));
         // // p1.Add(new PLine(new Vector2d(2.5f, -1f)));
         // p1.Add(new PQuadratic(new Vector2d(1, -3), new Vector2d(-1f, -1)));
@@ -91,11 +93,19 @@ public class Test : MonoBehaviour {
         p1.StrokePaint = paint2;
         p1.StrokeWidth = .1f;
         c1 = new PCubic(new Vector2d(2,0), new Vector2d(-2,3), new Vector2d(4,3), new Vector2d(0,0));
+        // c1 = new PCubic(new Vector2d(0,0), new Vector2d(1,0), new Vector2d(1,1), new Vector2d(2,0));
         p1.Add(c1);
+
+        p2.FillPaint = new PaintSolid(Color.yellow);
+        p2.StrokePaint = new PaintSolid(Color.red);
+        p2.StrokeWidth = .1f;
+
+        c1.Ctrl1=new Vector2d(points[1].transform.position.x, points[1].transform.position.y);
+        c1.Ctrl2=new Vector2d(points[2].transform.position.x, points[2].transform.position.y);
+        c1.EndPoint=new Vector2d(points[3].transform.position.x, points[3].transform.position.y);
 
         engine.addEntity(p1);
         // engine.addEntity(p2);
-
     }
     // Update is called once per frame
     void Update () {

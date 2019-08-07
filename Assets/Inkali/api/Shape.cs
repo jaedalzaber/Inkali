@@ -31,6 +31,8 @@ public abstract class Shape : Entity {
     public Vector2d startPoint;
     protected Vector2d endPoint;
 
+    private float depth;
+
     public Shape() {
         segments = new List<Segment>();
         CompFill comp = new CompFill();
@@ -48,7 +50,7 @@ public abstract class Shape : Entity {
         objStroke = new GameObject(obj.name + "_stroke");
         objStroke.transform.parent = obj.transform;
 
-        // UpdateFill= false;
+        // UpdateStroke= false;
 
         // Create Fill
         MeshFilter meshFilterFill = objFill.AddComponent(typeof(MeshFilter)) as MeshFilter;
@@ -76,6 +78,17 @@ public abstract class Shape : Entity {
             startPoint = segment.StartPoint;
         else
             segment.StartPoint = endPoint;
+        segments.Add(segment);
+        endPoint = segment.EndPoint;
+        UpdateFill = true;
+        UpdateStroke = true;
+    }
+
+    protected void AddSeperate(Segment segment) {
+        if (segments.Count == 0)
+            startPoint = segment.StartPoint;
+        // else
+        //     segment.StartPoint = endPoint;
         segments.Add(segment);
         endPoint = segment.EndPoint;
         UpdateFill = true;
@@ -264,6 +277,21 @@ public abstract class Shape : Entity {
                 s.stroke = value;
             stroke = value;
             updateStrokePaint = true;
+        }
+    }
+
+    public float Depth
+    {
+        get
+        {
+            return depth;
+        }
+
+        set
+        {
+            depth = value;
+            UpdateStroke = true;
+            UpdateFill = true;
         }
     }
 

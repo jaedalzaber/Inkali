@@ -58,17 +58,19 @@ public class SystemStroke : EntitySystem, EntityListener {
             List<Segment> s = PathUtils.outline(seg, comp.strokeWidth);
             foreach (Segment ss in s){
                 if(ss.GetType() == typeof(PQuad)){
-                    ((PQuad)ss).ToQuad(vertices, uv, indices);
+                    ((PQuad)ss).ToQuad(vertices, uv, indices, shape.Depth-.2f);
+                } else if(ss.GetType() == typeof(PCirFsix)){
+                    ((PCirFsix)ss).ToCircle(vertices, uv, indices, shape.Depth-.1f);
                 } 
                 else
-                    stroke.Add(ss);
+                    stroke.AddSeperate(ss);
             }
-            ProcessShape(stroke);
+            ProcessShape(stroke, shape.Depth);
         }
         if(res != null){
-            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, 1.1f));
-            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, 1.1f));
-            vertices.Add(new Vector3((float)res.x.min, (float)res.y.max, 1.1f));
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, shape.Depth-.1f));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, shape.Depth-.1f));
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.max, shape.Depth-.1f));
 
             uv.Add(new Vector4(1, 1, 1, 5));
             uv.Add(new Vector4(1, 1, 1, 5));
@@ -78,9 +80,9 @@ public class SystemStroke : EntitySystem, EntityListener {
             indices.Add(indices.Count);
             indices.Add(indices.Count);       
 
-            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, 1.1f));
-            vertices.Add(new Vector3((float)res.x.max, (float)res.y.min, 1.1f));
-            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, 1.1f));
+            vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, shape.Depth-.1f));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.min, shape.Depth-.1f));
+            vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, shape.Depth-.1f));
 
             uv.Add(new Vector4(1, 1, 1, 5));
             uv.Add(new Vector4(1, 1, 1, 5));
@@ -101,20 +103,24 @@ public class SystemStroke : EntitySystem, EntityListener {
         shape.UpdateStroke = false;
     }
 
-    private void ProcessShape(Shape shape) {
+    private void ProcessShape(Shape shape, float z) {
         foreach (Segment seg in shape.segments) {
             if(seg.GetType() == typeof(PCubic)) {
-                PathUtils.ComputeCubic((PCubic)seg, vertices, uv, indices);
+                PathUtils.ComputeCubic((PCubic)seg, vertices, uv, indices, z-.1f);
             } else if (seg.GetType() == typeof(PQuadratic)) {
                 PathUtils.ComputeQuadratic((PQuadratic)seg, vertices, uv, indices);
             } else if (seg.GetType() == typeof(PArc)) {
                 PathUtils.ComputeArc((PArc)seg, vertices, uv, indices);
             }
-            BBoxResult r = PathUtils.bbox(seg);
+           
+            
+            if(seg.GetType() != typeof(PCirFsix)){
+                BBoxResult r = PathUtils.bbox(seg);
                 if(r.x.max > res.x.max) res.x.max = r.x.max;
                 if(r.y.max > res.y.max) res.y.max = r.y.max;
                 if(r.x.min < res.x.min) res.x.min = r.x.min;
                 if(r.y.min < res.y.min) res.y.min = r.y.min;
+            }
         }
 
     //    FillShape(shape, vertices, uv, indices);
@@ -128,9 +134,9 @@ public class SystemStroke : EntitySystem, EntityListener {
                     // AddLineVert(new Vector3((float)((PArc)shape.segments[i]).CenterX, (float)((PArc)shape.segments[i]).CenterY, 1), vertices, uv, indices);
                     // AddLineVert(shape.segments[i].EndPoint.f3(), vertices, uv, indices);
                 } else {
-                    vertices.Add(shape.segments[0].StartPoint.f3());
-                    vertices.Add(shape.segments[i].EndPoint.f3());
-                    vertices.Add(shape.segments[i + 1].EndPoint.f3());
+                    vertices.Add(shape.segments[0].StartPoint.f3(shape.Depth));
+                    vertices.Add(shape.segments[i].EndPoint.f3(shape.Depth));
+                    vertices.Add(shape.segments[i + 1].EndPoint.f3(shape.Depth));
 
                     if(i == shape.segments.Count-2 && shape.segments.Count > 1){
                         uv.Add(new Vector4(1, 0, 1, 6));

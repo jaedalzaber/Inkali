@@ -19,6 +19,10 @@ public class Engine
 	 * Creates a new Entity object.
 	 * @return @{@link Entity}
 	 */
+    private float near = 0;
+    private float far = 100;
+    private static float currentDepth = 10;
+    private float incr = .01f;
 
     public Engine()
     {
@@ -39,8 +43,10 @@ public class Engine
     public Path CreatePath(string name) {
         GameObject obj = new GameObject(name);
         obj.AddComponent<Path>();
-
-        return obj.GetComponent<Path>();
+        Path p = obj.GetComponent<Path>();
+        p.Depth = currentDepth;
+        currentDepth-=.3f;
+        return p;
     }
 
     /**
