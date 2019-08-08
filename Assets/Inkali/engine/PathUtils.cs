@@ -81,7 +81,7 @@ public class PathUtils {
         List<int> i = new List<int>();
 
         CurveType curve_type = compute(cubic, (float)start.x, (float)start.y, (float)ctrl1.x, (float)ctrl1.y, (float)ctrl2.x, (float)ctrl2.y, (float)end.x, (float)end.y, -1,
-            vertices, uv, indices, z);
+            v, u, i, z);
 
        int ol = orientationLoop(start, ctrl1, ctrl2, end);
         Vector2d point = new Vector2d();
@@ -118,8 +118,34 @@ public class PathUtils {
         //}
 
         // vertices.AddRange(verts);
-        // 
-        
+        for(int j=0; j<v.Count; j+=3){
+            double angle = Angle(v[j], v[j+1], v[j+2]);
+            if((angle > 0.0 && !cubic.cut) || (angle < 0.0 && cubic.cut)){
+                vertices.Add(new Vector3(v[j].x, v[j].y, v[j].z));
+                uv.Add(new Vector4(u[j].x, u[j].y, u[j].z, u[j].w));
+                indices.Add(indices.Count);
+
+                vertices.Add(new Vector3(v[j+2].x, v[j+2].y, v[j+2].z));
+                uv.Add(new Vector4(u[j+2].x, u[j+2].y, u[j+2].z, u[j+2].w));
+                indices.Add(indices.Count);
+
+                vertices.Add(new Vector3(v[j+1].x, v[j+1].y, v[j+1].z));
+                uv.Add(new Vector4(u[j+1].x, u[j+1].y, u[j+1].z, u[j+1].w));
+                indices.Add(indices.Count);
+            } else {
+                vertices.Add(new Vector3(v[j].x, v[j].y, v[j].z));
+                uv.Add(new Vector4(u[j].x, u[j].y, u[j].z, u[j].w));
+                indices.Add(indices.Count);
+
+                vertices.Add(new Vector3(v[j+1].x, v[j+1].y, v[j+1].z));
+                uv.Add(new Vector4(u[j+1].x, u[j+1].y, u[j+1].z, u[j+1].w));
+                indices.Add(indices.Count);
+
+                vertices.Add(new Vector3(v[j+2].x, v[j+2].y, v[j+2].z));
+                uv.Add(new Vector4(u[j+2].x, u[j+2].y, u[j+2].z, u[j+2].w));
+                indices.Add(indices.Count);
+            }
+        }
         return point;
     }
 
@@ -1165,7 +1191,7 @@ public class PathUtils {
     }
 
     public static List<Segment> reduce(Segment c) {
-        double t1 = 0, t2 = 0, step = .01;
+        double t1 = 0, t2 = 0, step = .05;
         Segment segment;
         List<Segment> pass1 = new List<Segment>();
         List<Segment> pass2 = new List<Segment>();
@@ -1450,6 +1476,7 @@ public class PathUtils {
         // if (extrema.indexOf(1.0) != -1) {
         //     extrema.removeIndex(extrema.size-1);
         // }
+        
         for (int i = 1; i < extrema.size; i++) {
             Vector2d p = c.ValueAt(extrema.get(i));
             segments.Add(new PCirFsix((float)d2, c.ValueAt(extrema.get(i)).f()));
@@ -1470,9 +1497,9 @@ public class PathUtils {
             } else {
                 Segment f = scale(segment, d[0], null);
                 Segment b = scale(segment, -d2, null);
-                // b.cut = true;
-                Vector2d[] points = b.getPoints();          
-                double angle = Angle(points[0], points[b.getPoints().Length - 1], points[1]);
+                // // b.cut = true;
+                // Vector2d[] points = b.getPoints();          
+                // double angle = Angle(points[0], points[b.getPoints().Length - 1], points[1]);
                 // Debug.Log("angle: "+reduced.IndexOf(segment)+": " + angle);
                 // if(Clockwise(f) == true){
                 //     f.cut = false;
@@ -1613,13 +1640,13 @@ public class PathUtils {
         return arr;
     }
 
-    internal static void ComputeQuadratic(PQuadratic seg, List<Vector3> vertices, List<Vector4> uv, List<int> indices) {
-        vertices.Add(seg.StartPoint.f3());
-        vertices.Add(seg.Ctrl1.f3());
-        vertices.Add(seg.EndPoint.f3());
-        uv.Add(new Vector4(0, 0, 0, 2));
-        uv.Add(new Vector4(.5f, 0, 0, 2));
-        uv.Add(new Vector4(1, 1, 0, 2));
+    internal static void ComputeQuadratic(PQuadratic seg, List<Vector3> vertices, List<Vector4> uv, List<int> indices, float z) {
+        vertices.Add(seg.StartPoint.f3(z));
+        vertices.Add(seg.Ctrl1.f3(z));
+        vertices.Add(seg.EndPoint.f3(z));
+        uv.Add(new Vector4(0, 0, 0, seg.cut == true ? 8 : 2));
+        uv.Add(new Vector4(.5f, 0, 0, seg.cut == true ? 8 : 2));
+        uv.Add(new Vector4(1, 1, 0, seg.cut == true ? 8 : 2));
         indices.Add(indices.Count);
         indices.Add(indices.Count);
         indices.Add(indices.Count);

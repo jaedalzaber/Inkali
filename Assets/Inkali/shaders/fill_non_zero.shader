@@ -99,6 +99,33 @@ Shader "Inkali/Fill NonZero"
 					// }
 					// return fixed4(0,0,0, alpha );
 					return fixed4(_inColor.xyz, 0  * _inColor.w);
+				} 
+				
+				if (i.uv.w == 2) {
+					// sample the texture
+					float2 px = ddx(i.uv.xy);
+					float2 py = ddy(i.uv.xy);
+					// Chain rule
+					float fx = (2 * i.uv.x)*px.x - px.y;
+					float fy = (2 * i.uv.x)*py.x - py.y;
+					// Signed distance
+					float sd = (i.uv.x*i.uv.x - i.uv.y) / sqrt(fx*fx + fy * fy);
+
+					fixed4 col = _inColor;
+					//float alpha = 1;
+					///*if (sd > -0.01)
+					//	alpha = .5;*/
+					//if(sd > 0.0 )
+					//	alpha = 0;
+					float alpha = 0.5 - sd;
+					if (alpha < 0)  // Outside
+						discard;
+
+					else if (alpha <= 1)       // Inside
+						alpha = alpha;
+					else discard;
+
+					return fixed4(_inColor.xyz, 0  * _inColor.w);
 				}
 
 				if(i.uv.w == 4){
@@ -232,7 +259,7 @@ Shader "Inkali/Fill NonZero"
 			fixed4 frag(v2f i) : SV_Target
 			{
 				// return fixed4(1,0,0, 1);
-				if (i.uv.w == 0 || i.uv.w == 5     || i.uv.w == 7)
+				if (i.uv.w == 0 || i.uv.w == 5     || i.uv.w == 7 || i.uv.w == 8)
 					discard;
 				// if (i.uv.w == 5)
 				// 	return fixed4(0,0,1, 1);
@@ -310,13 +337,13 @@ Shader "Inkali/Fill NonZero"
 					//if(sd > 0.0 )
 					//	alpha = 0;
 					float alpha = 0.5 - sd;
-					if (alpha > 1)       // Inside
+					if (alpha < 0)  // Outside
 						discard;
-					else if (alpha < 0)  // Outside
-						discard;
-					else
-						// Near boundary
+
+					else if (alpha <= 1)       // Inside
 						alpha = alpha;
+					else discard;
+
 					return fixed4(_inColor.xyz, alpha  * _inColor.w);
 				}
 				else if (i.uv.w == 3) {
@@ -447,7 +474,7 @@ Shader "Inkali/Fill NonZero"
 			
 			fixed4 frag(v2f i) : SV_Target
 			{
-				if (i.uv.w == 5 || i.uv.w == 0  || i.uv.w == 1  || i.uv.w == 4)
+				if (i.uv.w == 5 || i.uv.w == 0  || i.uv.w == 1  || i.uv.w == 4 || i.uv.w == 2  )
 					discard;
 				// return fixed4(0,1,0, 1 * _inColor.w);
 				if (i.uv.w == 6){
@@ -491,7 +518,7 @@ Shader "Inkali/Fill NonZero"
 					return fixed4(_inColor.xyz, alpha * _inColor.w);
 				}
 
-				else if (i.uv.w == 2) {
+				else if (i.uv.w == 8) {
 					// sample the texture
 					float2 px = ddx(i.uv.xy);
 					float2 py = ddy(i.uv.xy);

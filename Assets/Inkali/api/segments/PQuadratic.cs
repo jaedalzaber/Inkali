@@ -46,8 +46,8 @@ public class PQuadratic : Segment {
     }
 
     public PQuadratic(Vector2d startPoint, Vector2d ctrl1, Vector2d endPoint) {
-        if (this.startPoint == null)
-            this.startPoint = startPoint;
+        // if (this.startPoint == null)
+        this.startPoint = startPoint;
         this.ctrl1 = ctrl1;
         this.endPoint = endPoint;
         points[0] = this.startPoint;
@@ -56,7 +56,7 @@ public class PQuadratic : Segment {
     }
 
     public PQuadratic(List<Vector2d> np) {
-            this.startPoint = np[0];
+        this.startPoint = np[0];
         this.ctrl1 = np[1];
         this.endPoint = np[2];
         points[0] = this.startPoint;
@@ -65,7 +65,7 @@ public class PQuadratic : Segment {
     }
 
     public PQuadratic(Vector2d[] np) {
-            this.startPoint = np[0];
+        this.startPoint = np[0];
         this.ctrl1 = np[1];
         this.endPoint = np[2];
         points[0] = this.startPoint;

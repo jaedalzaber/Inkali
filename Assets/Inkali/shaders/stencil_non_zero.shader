@@ -65,7 +65,7 @@ Shader "Inkali/Stencil NonZero"
 				if (i.uv.w == 5 || i.uv.w == 0 ) {
 					discard;
 				 }
-				if (i.uv.w == 1) {
+				if (i.uv.w == 1 || i.uv.w == 7) {
 					float3 px = ddx(i.uv.xyz);
 					float3 py = ddy(i.uv.xyz);
 
@@ -86,28 +86,8 @@ Shader "Inkali/Stencil NonZero"
 					return col;
 				 }
 
-				 if (i.uv.w == 7) {
-					float3 px = ddx(i.uv.xyz);
-					float3 py = ddy(i.uv.xyz);
 
-					// Chain rule
-					float fx = (3 * i.uv.x *i.uv.x)*px.x - (i.uv.z)*px.y - (i.uv.y)*px.z;
-					float fy = (3 * i.uv.x *i.uv.x)*py.x - (i.uv.z)*py.y - (i.uv.y)*py.z;
-					// Signed distance
-					float sd = (i.uv.x * i.uv.x * i.uv.x - i.uv.y * i.uv.z) / sqrt(fx*fx + fy * fy);
-					float alpha = 0.2 - sd;
-					fixed4 col = fixed4(_inColor.xyz, 1);
-
-					// float t = i.uv.x * i.uv.x * i.uv.x - i.uv.y * i.uv.z;
-					// float a = clamp(sign(t), 0.0, 1.0);
-					// if(a==1.0) discard;
-
-					if (alpha < 0 )  // Outside
-						discard;
-					return col;
-				 }
-
-				 else if (i.uv.w == 2) {
+				 else if (i.uv.w == 2 || i.uv.w == 8) {
 					 // sample the texture
 					 float2 px = ddx(i.uv.xy);
 					 float2 py = ddy(i.uv.xy);
