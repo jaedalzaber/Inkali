@@ -417,7 +417,7 @@
 			ZTest NotEqual
 			Stencil {
 				Ref 0
-				Comp NotEqual
+				Comp Always
 				Pass Zero
 				Fail Zero
 				ZFail Zero

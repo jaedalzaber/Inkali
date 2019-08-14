@@ -52,21 +52,35 @@ public class SystemStroke : EntitySystem, EntityListener {
         uv.Clear();
         indices.Clear();
         
+        if(shape.Closed){
+                PLine l = new PLine(shape.segments.Last().EndPoint, shape.startPoint);
+                Vector2d v0 = l.StartPoint + l.NormalAt(0, 1) * comp.strokeWidth;
+                Vector2d v1 = l.EndPoint     + l.NormalAt(0, 1) * comp.strokeWidth;
+                Vector2d v2 = l.EndPoint + l.NormalAt(0, -1) * comp.strokeWidth;
+                Vector2d v3 = l.StartPoint + l.NormalAt(0, -1) * comp.strokeWidth;
+                PQuad q = new PQuad(v3, v0, v1, v2);
+                q.ToQuad(vertices, uv, indices, shape.Depth-.2f);
+        }
+
         res = shape.segments.Count>0 ? PathUtils.bbox(shape.segments[0]) : null;
         foreach (Segment seg in shape.segments) {
             Path stroke = new Path();
-            List<Segment> s = PathUtils.outline(seg, comp.strokeWidth);
+            List<Segment> s = PathUtils.outline(seg, shape, comp.strokeWidth);
             foreach (Segment ss in s){
                 if(ss.GetType() == typeof(PQuad)){
                     ((PQuad)ss).ToQuad(vertices, uv, indices, shape.Depth-.2f);
                 } else if(ss.GetType() == typeof(PCirFsix)){
                     ((PCirFsix)ss).ToCircle(vertices, uv, indices, shape.Depth-.1f);
+                    stroke.AddSeperate(ss);
                 } 
                 else
                     stroke.AddSeperate(ss);
             }
+            
             ProcessShape(stroke, shape.Depth);
         }
+        
+        
         if(res != null){
             vertices.Add(new Vector3((float)res.x.min, (float)res.y.min, shape.Depth-.1f));
             vertices.Add(new Vector3((float)res.x.max, (float)res.y.max, shape.Depth-.1f));
@@ -113,14 +127,14 @@ public class SystemStroke : EntitySystem, EntityListener {
                 PathUtils.ComputeArc((PArc)seg, vertices, uv, indices);
             }
            
-            
-            if(seg.GetType() != typeof(PCirFsix)){
-                BBoxResult r = PathUtils.bbox(seg);
-                if(r.x.max > res.x.max) res.x.max = r.x.max;
-                if(r.y.max > res.y.max) res.y.max = r.y.max;
-                if(r.x.min < res.x.min) res.x.min = r.x.min;
-                if(r.y.min < res.y.min) res.y.min = r.y.min;
-            }
+            BBoxResult r = PathUtils.bbox(seg);
+            if(r.x.max > res.x.max) res.x.max = r.x.max;
+            if(r.y.max > res.y.max) res.y.max = r.y.max;
+            if(r.x.min < res.x.min) res.x.min = r.x.min;
+            if(r.y.min < res.y.min) res.y.min = r.y.min;
+            // if(seg.GetType() != typeof(PCirFsix)){
+                
+            // }
         }
 
     //    FillShape(shape, vertices, uv, indices);

@@ -1065,6 +1065,13 @@ public class PathUtils {
     }
 
     public static BBoxResult bbox(Segment c) {
+        if(c.GetType() == typeof(PCirFsix)){
+            PCirFsix cir = (PCirFsix)c;
+            BBoxResult r = new BBoxResult();
+            r.x = new BBoxDim(cir.Center.x - cir.Radius, cir.Center.x + cir.Radius);
+            r.y = new BBoxDim(cir.Center.y - cir.Radius, cir.Center.y + cir.Radius);
+            return r;
+        }
         XtrmResult extrema = Extrema(c);
         BBoxResult result = new BBoxResult();
         result.x = getMinMax(c, 0, extrema.x);
@@ -1190,11 +1197,14 @@ public class PathUtils {
         return subsplit.left;
     }
 
-    public static List<Segment> reduce(Segment c) {
-        double t1 = 0, t2 = 0, step = .05;
+    public static List<List<Segment>> reduce(Segment c) {
+        double t1 = 0, t2 = 0, step = .4;
+        const double STEP_5 = .4, STEP_1 = .2, STEP_05 = .05, STEP_01 = .01;
         Segment segment;
+        List<Segment> fix = new List<Segment>();
         List<Segment> pass1 = new List<Segment>();
         List<Segment> pass2 = new List<Segment>();
+        List<Segment> pass3 = new List<Segment>();
 
         DoubleArray extrema = Extrema(c).values;
         if (extrema.indexOf(0.0) == -1) {
@@ -1205,14 +1215,13 @@ public class PathUtils {
         }
 
         t1 = extrema.get(0);
-        //		System.out.println("Reduced Extremas: "+extrema.toString());
         for (int i = 1; i < extrema.size; i++) {
             t2 = extrema.get(i);
             segment = split(c, t1, t2);
             pass1.Add(segment);
             t1 = t2;
         }
-    //		System.out.println("Pass1 Count: " + pass1.Count);
+        int tick = 0;
         for (int i = 0; i < pass1.Count; i++) {
             Segment p1 = pass1[i];
             t1 = 0.0;
@@ -1222,24 +1231,51 @@ public class PathUtils {
                     segment = split(p1, t1, t2);
                     if (!simple(segment)) {
                         t2 -= step;
+                        if(step == STEP_5){
+                            step = STEP_1;
+                            continue;
+                        } else if(step == STEP_1){
+                            step = STEP_05;
+                            continue;
+                        } else if(step == STEP_05){
+                            step = STEP_01;
+                            continue;
+                        } 
                         if (Mathd.Abs(t1 - t2) < step) {
                             t1 = t2 + step;
+                            // pass2.Add(segment);
+                            // pass2.Add(new PLine(compute(t1, p1.getPointsList()), compute(t2, p1.getPointsList())));
+                            tick++;
                             goto B;
                         }
                         segment = split(p1, t1, t2);
                         pass2.Add(segment);
                         t1 = t2;
+                        tick++;
                         break;
                     }
+                    if(step == STEP_01){
+                        step = STEP_05;
+                    } else if(step == STEP_05){
+                        step = STEP_1;
+                    } else if(step == STEP_1){
+                        step = STEP_5;
+                    } 
+                    tick++;
                 }
             }
             if (t1 < 1.0) {
                 segment = split(p1, t1, 1);
                 pass2.Add(segment);
             }
+            step = STEP_5;
         }
-        //		System.out.println("Pass2 Count: " + pass2.Count);
-        return pass2;
+        // Debug.Log("tick: " + tick);
+
+        List<List<Segment>> l = new List<List<Segment>>();
+        l.Add(pass1);
+        l.Add(pass2);
+        return l;
     }
 
     public static float disc(PCubic c) {
@@ -1300,7 +1336,7 @@ public class PathUtils {
         double ss = n1[0] * n2[0] + n1[1] * n2[1];
         double angle = Mathd.Abs(Mathd.Acos(ss));
 
-        return angle < Mathd.PI / 3.6f;
+        return angle < Mathd.PI / 5f;
     }
 
     public static double[] normal(Segment c, double t) {
@@ -1364,7 +1400,7 @@ public class PathUtils {
     // }
 
     public static List<Segment> offset(Segment c, double d, LinearDistanceFunction distanceFn) {
-        List<Segment> reduced = reduce(c);
+        List<Segment> reduced = reduce(c)[1];
         List<Segment> result = new List<Segment>();
         foreach (PCubic segment in reduced) {
             Segment s = scale(segment, d, null);
@@ -1456,13 +1492,30 @@ public class PathUtils {
         
     }
 
-    public static List<Segment> outline(Segment c, params double[] d) {
-        double d2 = d.Length > 1 ? d[1] : d[0];
-        List<Segment> reduced = reduce(c);
+    // public static List<Segment> outlineLine(Segment c, Shape shape, params double[] d) {
+
+    // }
+
+    public static List<Segment> outline(Segment c, Shape shape, params double[] d) {
         List<Segment> segments = new List<Segment>();
+        if(c.GetType() == typeof(PLine)){
+            PLine p = (PLine)c;
+            Vector2d v0 = p.StartPoint + p.NormalAt(0, 1) * d[0];
+            Vector2d v1 = p.EndPoint + p.NormalAt(0, 1) * d[0];
+            Vector2d v2 = p.EndPoint + p.NormalAt(0, -1) * d[0];
+            Vector2d v3 = p.StartPoint + p.NormalAt(0, -1) * d[0];
+            segments.Add(new PQuad(v3, v0, v1, v2));
+
+            return segments;
+        }
+        
+        double d2 = d.Length > 1 ? d[1] : d[0];
+        List<List<Segment>> list = reduce(c);
+        List<Segment> reduced1 = list[0];
+        List<Segment> reduced2 = list[1];
 
         
-        int len = reduced.Count;
+        int len = reduced2.Count;
         List<Segment> fcurves = new List<Segment>();
         List<Segment> bcurves = new List<Segment>();
         double alen = 0.0;
@@ -1479,14 +1532,26 @@ public class PathUtils {
         
         for (int i = 1; i < extrema.size; i++) {
             Vector2d p = c.ValueAt(extrema.get(i));
-            segments.Add(new PCirFsix((float)d2, c.ValueAt(extrema.get(i)).f()));
+            // segments.Add(new PCirFsix((float)d2, c.ValueAt(extrema.get(i)).f()));
         }
 
         //TODO: Fix graduated stroke
         bool graduated = /*d.Length == 4 */ false;
 
         // form curve oulines
-        foreach (Segment segment in reduced) {
+        // if(reduced1[0].GetType() != typeof(PLine))
+        // segments.Add(new PCirFsix((float)d2, reduced1[0].StartPoint.f()));
+        // foreach (Segment segment in reduced1){
+        //     // if(segment.GetType() != typeof(PLine))
+        //     segments.Add(new PCirFsix((float)d2, segment.EndPoint.f()));
+        // }
+        for(int i=0; i<reduced1.Count-1; i++){
+            segments.Add(new PCirFsix((float)d2, reduced1[i].EndPoint.f()));
+        }
+
+        foreach (Segment segment in reduced2) {
+            // if(segment.GetType() == typeof(PLine))
+            //     break;
             double slen = length(segment, 10);
             
             if (graduated) {
@@ -1497,29 +1562,21 @@ public class PathUtils {
             } else {
                 Segment f = scale(segment, d[0], null);
                 Segment b = scale(segment, -d2, null);
-                // // b.cut = true;
-                // Vector2d[] points = b.getPoints();          
-                // double angle = Angle(points[0], points[b.getPoints().Length - 1], points[1]);
-                // Debug.Log("angle: "+reduced.IndexOf(segment)+": " + angle);
-                // if(Clockwise(f) == true){
-                //     f.cut = false;
-                //     b.cut = true;
-                // } else {
-                //     f.cut = true;
-                //     b.cut = false;
-                // }
-                // Fixes AA problem on strokes
                 f.cut = Clockwise(f) ? false : true;
                 b.cut = Clockwise(b) ? true : false;
 
-                PQuad quad = new PQuad(f.StartPoint, f.EndPoint, b.EndPoint, b.StartPoint);
-                segments.Add(quad);
+                // Add Filling Rectangle between front and back curves
+                segments.Add(new PQuad(f.StartPoint, f.EndPoint, b.EndPoint, b.StartPoint));
                 
                 fcurves.Add(f);
                 bcurves.Add(b);
             }
             alen += slen;
         }
+
+        // for(int i = 0; i < fcurves.Count - 1; i++){
+        //     Vector2d fe1 = fcurves[i].getPoints()[fcurves[i].getPoints().Length-1];
+        // }
 
         // reverse the "return" outline
         foreach (Segment segment in bcurves)

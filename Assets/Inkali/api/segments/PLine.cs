@@ -33,7 +33,11 @@ public class PLine : Segment {
     }
 
     public override Vector2d NormalAt(double t, int dir) {
-        throw new System.NotImplementedException();
+        Vector2d n = DerivativeAt(t);
+		if(dir<0)n.Set(n.y, -n.x);
+		if(dir >= 0)n.Set(-n.y, n.x);
+		n.Normalize();
+		return n;
     }
 
     public override Vector2d ValueAt(double t) {

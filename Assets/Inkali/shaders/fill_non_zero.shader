@@ -63,6 +63,7 @@ Shader "Inkali/Fill NonZero"
 			fixed4 frag(v2f i) : SV_Target
 			{
 				if (i.uv.w == 5 ){
+					// return fixed4(0,0,0, 1 );
 					return fixed4(_inColor.xyz, 1 * _inColor.w);
 				}
 				
@@ -97,7 +98,7 @@ Shader "Inkali/Fill NonZero"
 						
 					// 	// return fixed4(1,0,0, alpha);
 					// }
-					// return fixed4(0,0,0, alpha );
+					// return fixed4(0,0,0, 1 );
 					return fixed4(_inColor.xyz, 0  * _inColor.w);
 				} 
 				
@@ -259,7 +260,7 @@ Shader "Inkali/Fill NonZero"
 			fixed4 frag(v2f i) : SV_Target
 			{
 				// return fixed4(1,0,0, 1);
-				if (i.uv.w == 0 || i.uv.w == 5     || i.uv.w == 7 || i.uv.w == 8)
+				if (i.uv.w == 0 || i.uv.w == 5 || i.uv.w == 7 || i.uv.w == 8)
 					discard;
 				// if (i.uv.w == 5)
 				// 	return fixed4(0,0,1, 1);
@@ -281,7 +282,7 @@ Shader "Inkali/Fill NonZero"
 						discard;
 					if(dist > 1)
 						discard;
-					// return fixed4(0,1,0, 1 * _inColor.w);
+					// return fixed4(1,0,0, 1 * _inColor.w);
 					return fixed4(_inColor.xyz, alpha * _inColor.w);
 				}
 				// return fixed4(1,0,0, 1 * _inColor.w);
@@ -343,7 +344,7 @@ Shader "Inkali/Fill NonZero"
 					else if (alpha <= 1)       // Inside
 						alpha = alpha;
 					else discard;
-
+					// return fixed4(0,0,0, alpha );
 					return fixed4(_inColor.xyz, alpha  * _inColor.w);
 				}
 				else if (i.uv.w == 3) {
@@ -418,7 +419,7 @@ Shader "Inkali/Fill NonZero"
 					}
 					return fixed4(_inColor.xyz, (1-alpha) * _inColor.w);
 				}
-				return fixed4(_inColor.xyz, 1 * _inColor.w);
+				return fixed4(_inColor.xyz, 0 * _inColor.w);
 			}
 			ENDCG
 		}
@@ -477,6 +478,7 @@ Shader "Inkali/Fill NonZero"
 				if (i.uv.w == 5 || i.uv.w == 0  || i.uv.w == 1  || i.uv.w == 4 || i.uv.w == 2  )
 					discard;
 				// return fixed4(0,1,0, 1 * _inColor.w);
+				
 				if (i.uv.w == 6){
 					// float dist = distance(i.uv.xy, fixed2(1, 1));
 					// float delta = fwidth(dist);
@@ -514,7 +516,7 @@ Shader "Inkali/Fill NonZero"
 						// return fixed4(1,0,0, alpha );
 
 					}
-					// return fixed4(1,0,0, alpha * _inColor.w);
+					// return fixed4(0,0,0, alpha * _inColor.w);
 					return fixed4(_inColor.xyz, alpha * _inColor.w);
 				}
 
@@ -542,6 +544,7 @@ Shader "Inkali/Fill NonZero"
 					else
 						// Near boundary
 						alpha = 1-alpha;
+						
 					return fixed4(_inColor.xyz, alpha * _inColor.w);
 				}
 				else if (i.uv.w == 3) {
@@ -616,72 +619,72 @@ Shader "Inkali/Fill NonZero"
 					}
 					return fixed4(_inColor.xyz, (1-alpha) * _inColor.w);
 				}
-				return fixed4(_inColor.xyz, 1 * _inColor.w);
+				return fixed4(_inColor.xyz, 0 * _inColor.w);
 			}
 			ENDCG
 		}
 
 		
 
-		// Pass
-		// {
-		// 	Cull off
-		// 	ZWrite off
-		// 	Blend SrcAlpha OneMinusSrcAlpha
-		// 	ZTest NotEqual
-		// 	Stencil {
-		// 		Ref 0
-		// 		Comp NotEqual
-		// 		Pass Zero
-		// 		Fail Zero
-		// 		ZFail Zero
-		// 		// WriteMask 1
-		// 	}
+		Pass
+		{
+			Cull off
+			ZWrite off
+			Blend SrcAlpha OneMinusSrcAlpha
+			ZTest NotEqual
+			Stencil {
+				Ref 0
+				Comp NotEqual
+				Pass Zero
+				Fail Zero
+				ZFail Zero
+				// WriteMask 1
+			}
 
-		// 	CGPROGRAM
-		// 	#pragma vertex vert
-		// 	#pragma fragment frag
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
 			
-		// 	#include "UnityCG.cginc"
+			#include "UnityCG.cginc"
 
-		// 	struct appdata
-		// 	{
-		// 		float4 vertex : POSITION;
-		// 		float4 uv : TEXCOORD0;
-		// 		// float4 uv2 : TEXCOORD1;
-		// 	};
+			struct appdata
+			{
+				float4 vertex : POSITION;
+				float4 uv : TEXCOORD0;
+				// float4 uv2 : TEXCOORD1;
+			};
 
-		// 	struct v2f
-		// 	{
-		// 		float4 uv : TEXCOORD0;
-		// 		// float4 uv2 : TEXCOORD1;
-		// 		float4 vertex : SV_POSITION;
-		// 	};
+			struct v2f
+			{
+				float4 uv : TEXCOORD0;
+				// float4 uv2 : TEXCOORD1;
+				float4 vertex : SV_POSITION;
+			};
 
-		// 	sampler2D _MainTex;
-		// 	float4 _MainTex_ST;
-		// 	fixed4 _inColor;
-		// 	fixed4 _outColor;
+			sampler2D _MainTex;
+			float4 _MainTex_ST;
+			fixed4 _inColor;
+			fixed4 _outColor;
 			
-		// 	v2f vert (appdata v)
-		// 	{
-		// 		v2f o;
-		// 		o.vertex = UnityObjectToClipPos(v.vertex);
-		// 		o.uv = v.uv;
-		// 		// o.uv2 = v.uv2;
-		// 		return o;
-		// 	}
+			v2f vert (appdata v)
+			{
+				v2f o;
+				o.vertex = UnityObjectToClipPos(v.vertex);
+				o.uv = v.uv;
+				// o.uv2 = v.uv2;
+				return o;
+			}
 			
-		// 	fixed4 frag(v2f i) : SV_Target
-		// 	{
-		// 		// return fixed4(1,0,0, 1);
-		// 		if (i.uv.w != 5)
-		// 			discard;
-		// 		// if (i.uv.w == 5)
-		// 		// 	return fixed4(0,0,1, 1);
-		// 		return fixed4(_inColor.xyz, 0 * _inColor.w);
-		// 	}
-		// 	ENDCG
-		// }
+			fixed4 frag(v2f i) : SV_Target
+			{
+				// return fixed4(1,0,0, 1);
+				if (i.uv.w != 5)
+					discard;
+				// if (i.uv.w == 5)
+				// 	return fixed4(0,0,1, 1);
+				return fixed4(_inColor.xyz, 0 * _inColor.w);
+			}
+			ENDCG
+		}
 	}
 }

@@ -19,6 +19,7 @@ public abstract class Shape : Entity {
     protected LineCap linecap = LineCap.FLAT;
     protected LineJoin linejoin = LineJoin.MILTER;
     protected float milterLimit = 4;
+    private bool closed = true;
 
     protected float fillOpacity = 3001;
     protected FillRule fillrule = FillRule.EVEN_ODD;
@@ -292,6 +293,19 @@ public abstract class Shape : Entity {
             depth = value;
             UpdateStroke = true;
             UpdateFill = true;
+        }
+    }
+
+    public bool Closed
+    {
+        get
+        {
+            return closed;
+        }
+
+        set
+        {
+            closed = value;
         }
     }
 
