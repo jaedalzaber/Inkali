@@ -118,6 +118,10 @@ public class PQuad : Segment {
         indices.Add(indices.Count);    
     }
 
+    public bool Clockwise(){
+        return PathUtils.Clockwise(this);
+    }
+
     private Vector2d tmp = new Vector2d(), tmp2 = new Vector2d();
     private List<Vector2d> np;
     private Vector2d[] np1;

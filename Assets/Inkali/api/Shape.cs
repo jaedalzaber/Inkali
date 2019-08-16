@@ -118,6 +118,12 @@ public abstract class Shape : Entity {
         UpdateFill = true;
     }
 
+    public List<Segment> GetSegmentsCopy(){
+        Segment[] arr = new Segment[segments.Count];
+        this.segments.CopyTo(arr);
+        return new List<Segment>(arr);
+    }
+
  /*   protected void AddAfter(Segment segment, Segment after) {
         if (segments.Contains(after)) {
             int index = segments.IndexOf(after) + 1;

@@ -118,6 +118,9 @@ public class PathUtils {
         //}
 
         // vertices.AddRange(verts);
+
+
+        // Make all trinagles front facing
         for(int j=0; j<v.Count; j+=3){
             double angle = Angle(v[j], v[j+1], v[j+2]);
             if((angle > 0.0 && !cubic.cut) || (angle < 0.0 && cubic.cut)){
@@ -876,6 +879,21 @@ public class PathUtils {
         return new PCubic(x1, y1, x1 + dx, y1 + dy, x1 + 2.0 * dx, y1 + 2.0 * dy, x2, y2);
     }
 
+    public static Vector2d FindIntersection(Vector2d s1, Vector2d e1, Vector2d s2, Vector2d e2) {
+        double a1 = e1.y - s1.y;
+        double b1 = s1.x - e1.x;
+        double c1 = a1 * s1.x + b1 * s1.y;
+ 
+        double a2 = e2.y - s2.y;
+        double b2 = s2.x - e2.x;
+        double c2 = a2 * s2.x + b2 * s2.y;
+ 
+        double delta = a1 * b2 - a2 * b1;
+        //If lines are parallel, the result will be (NaN, NaN).
+        return delta == 0 ? new Vector2d(float.NaN, float.NaN)
+            : new Vector2d((b2 * c1 - b1 * c2) / delta, (a1 * c2 - a2 * c1) / delta);
+    }
+
     public static DoubleArray LineIntersects(PCubic c, Line line) {
         double minX = Mathd.Min(line.p1.x, line.p2.x);
         double minY = Mathd.Min(line.p1.y, line.p2.y);
@@ -1496,17 +1514,26 @@ public class PathUtils {
 
     // }
 
-    public static List<Segment> outline(Segment c, Shape shape, params double[] d) {
+    public static List<List<Segment>> outline(Segment c, Shape shape, params double[] d) {
+        List<List<Segment>> output = new List<List<Segment>>();
         List<Segment> segments = new List<Segment>();
+        List<Segment> lineJoin = new List<Segment>();
+
+        // Outline PLine then return
         if(c.GetType() == typeof(PLine)){
             PLine p = (PLine)c;
             Vector2d v0 = p.StartPoint + p.NormalAt(0, 1) * d[0];
             Vector2d v1 = p.EndPoint + p.NormalAt(0, 1) * d[0];
             Vector2d v2 = p.EndPoint + p.NormalAt(0, -1) * d[0];
             Vector2d v3 = p.StartPoint + p.NormalAt(0, -1) * d[0];
-            segments.Add(new PQuad(v3, v0, v1, v2));
+            PQuad q = new PQuad(v3, v0, v1, v2);
 
-            return segments;
+            segments.Add(q);
+            lineJoin.Add(q);
+            output.Add(segments);
+            output.Add(lineJoin);
+
+            return output;
         }
         
         double d2 = d.Length > 1 ? d[1] : d[0];
@@ -1521,37 +1548,21 @@ public class PathUtils {
         double alen = 0.0;
         double tlen = length(c, 10);
 
-        // Fix Stroke sharp corner arteffect 
-        DoubleArray extrema = Extrema(c).values;
-        // if (extrema.indexOf(0.0) != -1) {
-        //     extrema.removeIndex(0);
-        // }
-        // if (extrema.indexOf(1.0) != -1) {
-        //     extrema.removeIndex(extrema.size-1);
-        // }
-        
-        for (int i = 1; i < extrema.size; i++) {
-            Vector2d p = c.ValueAt(extrema.get(i));
-            // segments.Add(new PCirFsix((float)d2, c.ValueAt(extrema.get(i)).f()));
-        }
-
         //TODO: Fix graduated stroke
         bool graduated = /*d.Length == 4 */ false;
 
-        // form curve oulines
-        // if(reduced1[0].GetType() != typeof(PLine))
-        // segments.Add(new PCirFsix((float)d2, reduced1[0].StartPoint.f()));
-        // foreach (Segment segment in reduced1){
-        //     // if(segment.GetType() != typeof(PLine))
-        //     segments.Add(new PCirFsix((float)d2, segment.EndPoint.f()));
-        // }
+        // Add a circle at each extrema, except at start and end point
+        Vector2d start = reduced1[0].StartPoint;
+        Vector2d end = reduced1[reduced1.Count-1].EndPoint;
         for(int i=0; i<reduced1.Count-1; i++){
-            segments.Add(new PCirFsix((float)d2, reduced1[i].EndPoint.f()));
+            Vector2d center = reduced1[i].EndPoint;
+            double sr = d2 * d2;
+            if((start-center).sqrMagnitude > sr && (center-end).sqrMagnitude > sr)
+            segments.Add(new PCirFsix((float)d2, center.f()));
         }
 
+        // Generate stroke by scaling curve in two sides and add fill quad
         foreach (Segment segment in reduced2) {
-            // if(segment.GetType() == typeof(PLine))
-            //     break;
             double slen = length(segment, 10);
             
             if (graduated) {
@@ -1567,35 +1578,15 @@ public class PathUtils {
 
                 // Add Filling Rectangle between front and back curves
                 segments.Add(new PQuad(f.StartPoint, f.EndPoint, b.EndPoint, b.StartPoint));
-                
                 fcurves.Add(f);
                 bcurves.Add(b);
             }
             alen += slen;
         }
 
-        // for(int i = 0; i < fcurves.Count - 1; i++){
-        //     Vector2d fe1 = fcurves[i].getPoints()[fcurves[i].getPoints().Length-1];
-        // }
-
-        // reverse the "return" outline
         foreach (Segment segment in bcurves)
             segment.reverse();
         bcurves.Reverse();
-
-        // foreach (Segment b in bcurves)
-        // {
-        //     Vector2d[] points = b.getPoints();          
-        //     double angle = Angle(points[0], points[b.getPoints().Length - 1], points[1]);
-        //     double angle2 = Angle(points[b.getPoints().Length - 1], points[2], points[1]);
-        //     if(angle > 0 && angle2 < 0){
-        //         Debug.Log("angle1 "+bcurves.IndexOf(b)+": " + angle);
-        //         Debug.Log("angle2 "+bcurves.IndexOf(b)+": " + angle2);
-        //         Debug.Log("problem " );
-        //         bcurves.RemoveAt(bcurves.IndexOf(b));
-        //         fcurves.RemoveAt(bcurves.IndexOf(b));
-        //     }
-        // }
 
         // form the endcaps as lines
         Vector2d fs = fcurves[0].getPoints()[0];
@@ -1608,56 +1599,15 @@ public class PathUtils {
         segments.Add(new PLine(be));
         segments.AddRange(bcurves);
         segments.Add(new PLine(fs));
-        return segments;
+
+        PQuad quad = new PQuad(bcurves.Last().EndPoint, fcurves.First().StartPoint, fcurves.Last().EndPoint, bcurves.First().StartPoint);
+        lineJoin.Add(quad);
+
+        output.Add(segments);
+        output.Add(lineJoin);
+
+        return output;
     }
-
-    // public static List<PCubic> outline2(PCubic c, params double[] d) {
-    //     double d2 = d.Length > 1 ? d[1] : d[0];
-    //     List<PCubic> reduced = reduce(c);
-    //     int len = reduced.Count;
-    //     List<PCubic> fcurves = new List<PCubic>();
-    //     List<PCubic> bcurves = new List<PCubic>();
-    //     double alen = 0.0;
-    //     double tlen = length(c, 10);
-
-    //     bool graduated = d.Length == 4;
-
-    //     // form curve oulines
-    //     foreach (PCubic segment in reduced) {
-    //         double slen = length(segment, 10);
-    //         if (graduated) {
-    //             fcurves.Add(
-    //                     scale(segment, 0.0, new LinearDistanceFunction(d[0], d[2], tlen, alen, slen)));
-    //             bcurves.Add(
-    //                     scale(segment, 0.0, new LinearDistanceFunction(-d2, -d[4], tlen, alen, slen)));
-    //         } else {
-    //             fcurves.Add(scale(segment, d[0], null));
-    //             bcurves.Add(scale(segment, -d2, null));
-    //         }
-    //         alen += slen;
-    //     }
-
-    //     // reverse the "return" outline
-    //     foreach (PCubic segment in bcurves)
-    //         segment.reverse();
-    //     bcurves.Reverse();
-
-    //     List<PCubic> segments = new List<PCubic>();
-    //     if (fcurves.Count != 0 || bcurves.Count != 0) {
-    //         // form the endcaps as lines
-    //         Vector2d fs = fcurves[0].points[0];
-    //         Vector2d fe = fcurves[len - 1].points[fcurves[len - 1].points.Length - 1];
-    //         Vector2d bs = bcurves[len - 1].points[bcurves[len - 1].points.Length - 1];
-    //         Vector2d be = bcurves[0].points[0];
-    //         PCubic le = makeline(fe, be);
-    //         PCubic ls = makeline(bs, fs);
-    //         segments.Add(ls);
-    //         segments.Add(le);
-    //     }
-    //     segments.AddRange(fcurves);
-    //     segments.AddRange(bcurves);
-    //     return segments;
-    // }
 
     public static DoubleArray inflections(PCubic cb) {
         // FIXME: TODO: add in inflection abstraction for quartic+ curves?
