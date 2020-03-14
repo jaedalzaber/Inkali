@@ -16,8 +16,8 @@ public class Test : MonoBehaviour {
 
     public class PositionComponent : Component
     {
-        public float x = 0.0f;
-        public float y = 0.0f;
+        public float x = 1.0f;
+        public float y = 1.0f;
     }
 
     public class VelocityComponent : Component
